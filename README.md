@@ -101,32 +101,27 @@ El análisis se realizará en dos etapas complementarias:
 De este modo, la combinación de un diseño longitudinal y análisis comunal permite capturar tanto la dimensión temporal (variaciones entre elecciones) como la territorial (heterogeneidad entre comunas) del fenómeno electoral. Además, el uso de regresión múltiple con efectos fijos fortalece la validez interna del estudio, asegurando que las asociaciones identificadas entre desempleo y voto opositor reflejen relaciones plausibles y no sean producto de variables omitidas o de la estructura espacial de los datos.
 
 ### 7.4 Procedimiento y herramientas
-El procesamiento y análisis de los datos se realizará mediante software estadístico R, utilizando técnicas de limpieza, normalización y depuración de bases de datos. 
-Los resultados se presentarán mediante tablas de coeficientes, intervalos de confianza y gráficos comparativos que ilustren la relación entre desempleo y comportamiento electoral. 
+El análisis de los datos se realizará siguiendo un procedimiento estructurado en cinco pasos principales, asegurando coherencia, trazabilidad y replicabilidad del estudio. Todas las etapas se implementarán utilizando software estadístico R, lo que permitirá la limpieza, integración y análisis de los datos de manera sistemática.
 
+**Paso 1: Selección y depuración de bases de datos**
 
-## 8. Bases de datos a utilizar
-### 8.1 Base de datos de ocupación y desocupación (INE)
-- **Fuente:** Instituto Nacional de Estadísticas (INE)
-- **Cobertura:** Información trimestral y anual sobre empleo y desempleo a nivel comunal y regional.
-- **Variables principales:**
-      - Tasa de desocupación (%)
-      - Tasa de ocupación (%)
-      - Población económicamente activa (PEA)
-      - Población ocupada y desocupada por sexo
-      - Participación laboral por tramo etario
-  - **Uso en el estudio**: Se utilizarán las tasas promedio anuales de desempleo por comuna para los años 2010 a 2017, permitiendo comparar su evolución con los resultados electorales presidenciales. 
+Se integrarán la base de ocupación y desocupación del INE y la base de resultados presidenciales del Servel mediante el identificador único de cada comuna. Durante este proceso se normalizarán los nombres de las comunas, se estandarizará la codificación de las regiones y se homogenizarán los formatos de las variables. El objetivo de esta etapa es asegurar la coherencia territorial y temporal de los datos, garantizando que cada registro comunal corresponda correctamente entre ambas fuentes y que los datos sean comparables.
 
-### 8.2 Base de datos de resultados presidenciales (Servel/CEP)
-- **Fuente:** Base oficial del Centro de Estudios Públicos (CEP) elaborada a partir de datos del **Servicio Electoral de Chile (Servel)**
-       — archivo: “resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx”.
-- **Cobertura:** Resultados comunales de todas las elecciones presidenciales entre 1989 y 2017.
-- **Variables principales:**
-      - Año de elección
-      - Nombre del candidato/a
-      - Pacto o coalición política
-      - Votos por candidato
-      - Porcentaje de votación por candidato
+**Paso 2: Construcción del panel comunal**
+
+Una vez depuradas las bases, se construirá un panel de datos comunal para el período 2010–2017, incluyendo la variable dependiente (voto por la oposición), la variable independiente principal (tasa de desempleo comunal promedio) y las variables de control (población total, densidad, ruralidad, región, proporción de mujeres, nivel educativo promedio y nivel de ingresos). Este panel permitirá analizar tanto la dimensión temporal, observando cambios entre elecciones, como la dimensión territorial, considerando la heterogeneidad entre comunas.
+
+**Paso 3: Análisis descriptivo**
+
+Se realizará una exploración preliminar de los datos mediante análisis descriptivos. Esto incluye la revisión de la evolución temporal de las tasas de desempleo y del voto opositor por comuna, la identificación de tendencias generales, patrones espaciales y posibles valores atípicos. Se utilizarán funciones de R para generar gráficos y resúmenes estadísticos que faciliten la visualización de los datos y la comprensión de la dinámica entre variables.
+
+**Paso 4: Análisis inferencial**
+
+Se estimarán modelos de regresión lineal múltiple (OLS) y modelos de panel con efectos fijos (plm en R) para evaluar la asociación entre la tasa de desempleo y el voto por la oposición, controlando por variables sociodemográficas y territoriales. Se incorporarán efectos fijos por región y por año para controlar diferencias estructurales entre comunas y por ciclos electorales, asegurando que las asociaciones observadas reflejen variaciones locales reales y no sean producto de factores externos o heterogeneidad territorial.
+
+**Paso 5: Presentación y visualización de resultados**
+
+Los resultados se presentarán mediante tablas de coeficientes, intervalos de confianza y gráficos comparativos que ilustren la relación entre desempleo y comportamiento electoral. Esta etapa permitirá comunicar de manera clara y precisa los hallazgos del estudio, facilitando la interpretación de los efectos estimados y su relevancia para la pregunta de investigación.
 
 ## 9. Referencias
 
