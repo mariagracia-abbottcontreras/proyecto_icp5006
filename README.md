@@ -46,11 +46,26 @@ La investigación adoptará un enfoque cuantitativo con un diseño longitudinal 
 El enfoque cuantitativo es apropiado dado que la investigación busca medir la magnitud y dirección del efecto del desempleo sobre el voto opositor, estableciendo relaciones sistemáticas entre variables a lo largo del tiempo.
 
 ### 7.1 Unidad de análisis
-Unidad principal: Comuna.
+**Unidad principal**: Comuna.
 
-Justificación: La comuna constituye la unidad territorial básica de Chile con disponibilidad de datos tanto de empleo como de resultados electorales. Su nivel desagregado permite capturar variaciones locales en la economía y en las preferencias políticas que no serían visibles a nivel regional o nacional. Analizar la comuna permite evaluar si los cambios en las condiciones laborales locales se asocian con un voto de castigo o apoyo hacia el gobierno en ejercicio, abordando directamente la pregunta y los objetivos de la investigación.
+La comuna constituye la unidad territorial básica de Chile con disponibilidad de datos tanto de empleo como de resultados electorales. Su nivel desagregado permite capturar variaciones locales en la economía y en las preferencias políticas que no serían visibles a nivel regional o nacional. Analizar la comuna permite evaluar si los cambios en las condiciones laborales locales se asocian con un voto de castigo o apoyo hacia el gobierno en ejercicio, abordando directamente la pregunta y los objetivos de la investigación.
 
-### 7.2 Variables
+### 7.2 Selección y descripción de bases de datos y variables
+Para dar respuesta a la pregunta de investigación sobre el efecto de la tasa de desempleo comunal en el voto opositor en Chile entre 2010 y 2017, se seleccionaron dos bases de datos oficiales y confiables, que serán integradas y analizadas a nivel comunal:
+
+1. **Base de datos de ocupación y desocupación (INE)**
+
+Fuente: https://www.ine.gob.cl/estadisticas/sociales/mercado-laboral/ocupacion-y-desocupacion
+
+La base de datos de ocupación y desocupación proporcionada por el Instituto Nacional de Estadísticas (INE) contiene información anual sobre la tasa de desocupación a nivel comunal en Chile. Esta fuente permite construir la **variable independiente principal** del estudio, correspondiente a la tasa de desempleo comunal promedio en el año de cada elección presidencial. Al incorporar esta información, se capturan las condiciones laborales locales que podrían influir en las decisiones de voto de los habitantes de cada comuna, reflejando cómo la situación económica del territorio puede incidir en el comportamiento electoral. La confiabilidad y cobertura nacional de esta base aseguran que el análisis se apoye en datos oficiales y consistentes.
+
+2. **Base de datos de resultados presidenciales (Servel)**
+
+Archivo: resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx
+
+Por su parte, la base de datos de resultados presidenciales del Servicio Electoral (Servel), contenida en el archivo resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx, registra el porcentaje de votación obtenido por cada candidato presidencial a nivel comunal para las elecciones de 2013 y 2017. Esta información permite medir la **variable dependiente**, es decir, el voto por los candidatos de oposición en cada comuna, que constituye el foco principal de esta investigación. Gracias a la desagregación comunal de los datos, es posible analizar de manera precisa la relación entre las condiciones económicas locales y las preferencias electorales, garantizando un vínculo directo entre las variables de interés y la unidad de análisis definida en el estudio.
+
+**Variables consideradas**:
 
 - **Variable dependiente**: Porcentaje de votación por el candidato de oposición en cada elección presidencial.
 
@@ -65,7 +80,11 @@ Justificación: La comuna constituye la unidad territorial básica de Chile con 
    - Nivel educativo promedio
    - Nivel de ingresos promedio
 
-Estas variables controlan factores sociodemográficos y territoriales que podrían influir en el comportamiento electoral y permiten aislar el efecto específico del desempleo.
+Estas variables de control permiten aislar el efecto del desempleo sobre el voto opositor, considerando factores sociodemográficos y territoriales que podrían influir en la conducta electoral.
+
+**Integración de las bases de datos:**
+
+Para integrar ambas bases de datos, se utilizará el **identificador único de cada comuna**, lo que permitirá asegurar la coherencia tanto territorial como temporal de la información. Este proceso implicará la normalización de los nombres de las comunas, la estandarización de la codificación de las regiones y la homogenización de los formatos de las distintas variables, garantizando que todos los datos sean compatibles y comparables entre sí. Una vez realizada esta integración y depuración, se construirá un **panel de datos comunal para el período 2010–2017**, que servirá como base para el análisis estadístico. Este panel permitirá evaluar cómo las variaciones en la tasa de desempleo comunal se asocian con los cambios en el voto por la oposición, controlando al mismo tiempo por factores sociodemográficos y territoriales, y asegurando que los resultados reflejen relaciones consistentes y confiables entre las variables de interés.
 
 ### 7.3 Estrategia analítica
 El análisis se realizará en dos etapas complementarias:
@@ -79,7 +98,9 @@ El análisis se realizará en dos etapas complementarias:
    - Se incorporarán efectos fijos por región y por año para controlar por diferencias estructurales entre comunas y por ciclos electorales, asegurando que los resultados reflejen variaciones locales de manera más precisa.
    - El análisis se implementará en R, utilizando paquetes estadísticos como lm() para regresión lineal y plm para modelos de panel con efectos fijos, lo que permitirá replicabilidad y trazabilidad del análisis.
 
-### 7.3 Procedimiento y herramientas
+De este modo, la combinación de un diseño longitudinal y análisis comunal permite capturar tanto la dimensión temporal (variaciones entre elecciones) como la territorial (heterogeneidad entre comunas) del fenómeno electoral. Además, el uso de regresión múltiple con efectos fijos fortalece la validez interna del estudio, asegurando que las asociaciones identificadas entre desempleo y voto opositor reflejen relaciones plausibles y no sean producto de variables omitidas o de la estructura espacial de los datos.
+
+### 7.4 Procedimiento y herramientas
 El procesamiento y análisis de los datos se realizará mediante software estadístico R, utilizando técnicas de limpieza, normalización y depuración de bases de datos. 
 Los resultados se presentarán mediante tablas de coeficientes, intervalos de confianza y gráficos comparativos que ilustren la relación entre desempleo y comportamiento electoral. 
 
