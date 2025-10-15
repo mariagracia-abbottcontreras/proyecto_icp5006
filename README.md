@@ -55,23 +55,29 @@ Justificación: La comuna constituye la unidad territorial básica de Chile con 
 - **Variable dependiente**: Porcentaje de votación por el candidato de oposición en cada elección presidencial.
 
 - **Variable independiente principal**: Tasa de desempleo comunal promedio del año electoral.
-
+  
 - **Variables de control**:
-      - Población total de la comuna
-      - Densidad poblacional
-      - Ruralidad (proporción de población rural)
-      - Región
-      - Proporción de mujeres
-      - Nivel educativo promedio
-      - Nivel de ingresos promedio
+   - Población total de la comuna
+   - Densidad poblacional
+   - Ruralidad (proporción de población rural)
+   - Región
+   - Proporción de mujeres
+   - Nivel educativo promedio
+   - Nivel de ingresos promedio
 
 Estas variables controlan factores sociodemográficos y territoriales que podrían influir en el comportamiento electoral y permiten aislar el efecto específico del desempleo.
 
 ### 7.3 Estrategia analítica
-Se aplicarán modelos de regresión lineal múltiple (OLS) para estimar el efecto del desempleo comunal sobre el voto por la oposición. 
-Para fortalecer la validez del análisis, se incluirán efectos fijos por región y año, con el fin de controlar diferencias estructurales y coyunturales entre territorios y ciclos electorales. 
-El análisis se desarrollará en dos etapas:
-      1. **Análisis descriptivo:** Revisión de la evolución temporal de las tasas de desempleo y los resultados electorales por comuna, identificando tendencias y correlaciones preliminares
+El análisis se realizará en dos etapas complementarias:
+
+1. **Análisis descriptivo**
+   - Se explorará la evolución temporal de las tasas de desempleo y los resultados electorales a nivel comunal entre 2010 y 2017.
+   - Se identificarán tendencias, patrones espaciales y correlaciones preliminares entre desempleo y voto opositor.
+     
+3. **Análisis inferencial**
+   - Se estimarán modelos de regresión lineal múltiple (OLS) para evaluar la asociación entre la tasa de desempleo y el porcentaje de votos por la oposición, controlando por las variables sociodemográficas y territoriales.
+   - Se incorporarán efectos fijos por región y por año para controlar por diferencias estructurales entre comunas y por ciclos electorales, asegurando que los resultados reflejen variaciones locales de manera más precisa.
+   - El análisis se implementará en R, utilizando paquetes estadísticos como lm() para regresión lineal y plm para modelos de panel con efectos fijos, lo que permitirá replicabilidad y trazabilidad del análisis.
 
 ### 7.3 Procedimiento y herramientas
 El procesamiento y análisis de los datos se realizará mediante software estadístico R, utilizando técnicas de limpieza, normalización y depuración de bases de datos. 
