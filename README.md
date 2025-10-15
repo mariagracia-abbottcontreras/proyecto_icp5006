@@ -161,11 +161,17 @@ Los resultados se presentarán mediante tablas de coeficientes, intervalos de co
 
 ## 9. Referencias
 
-Cerda, R., & Vergara, R. (2009). Business cycle and political economy: The Chilean case. Economía Chilena (The Chilean Economy), 12(2), 5–28.
+Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. https://www.cepchile.cl
 
-Lewis-Beck, M. S., & Stegmaier, M. (2019). Economic voting. In R. S. Katz & W. Crotty (Eds.), The Oxford Handbook of Political Science (pp. 1–20). Oxford University Press. https://doi.org/10.1093/oxfordhb/9780199234479.003.0009
+Lewis-Beck, M. S., & Stegmaier, M. (2007). Economic models of voting. In R. J. Dalton & H.-D. Klingemann (Eds.), *The Oxford Handbook of Political Behavior (pp. 518–537).* Oxford University Press. https://doi.org/10.1093/oxfordhb/9780199270125.003.0029
 
-Navia, P., & Soto, A. (2015). Economic voting and incumbent support in Chile: Evidence from the 2009 presidential election. Latin American Politics and Society, 57(2), 89–111. https://doi.org/10.1111/j.1548-2456.2015.00269.x
+Lewis-Beck, M. S., & Stegmaier, M. (2019). Economic voting. In C. Anderson, L. LeDuc, & R. Niemi (Eds.), *Comparing Democracies: Elections and Voting in a Changing World* (pp. 209–228). SAGE Publications.
 
-Sáez-Lozano, J. L., Jaime-Castillo, A. M., & Letelier-Saavedra, F. (2014). Economic performance and support for the incumbent government: The case of Chile, 1990–2009. Revista Española de Investigaciones Sociológicas, 147, 3–26. https://doi.org/10.5477/cis/reis.147.3
+López, M. Á. (2004). *Clivajes sociales y comportamiento electoral en Chile, 1988–2001.* Revista de Ciencia Política (Santiago), 24(1), 31–58. https://doi.org/10.4067/S0718-090X2004000100002
+
+Navia, P., & Soto Castro, M. (2015). *Voto económico y comportamiento electoral en Chile: 1999–2013.* Revista de Ciencia Política (Santiago), 35(3), 589–613. https://doi.org/10.4067/S0718-090X2015000300003
+
+Sáez-Lozano, J. L., Jaime-Castillo, A. M., & Letelier-Saavedra, M. (2014). *Economic voting under uncertainty: Evidence from the Chilean presidential elections.* Electoral Studies, 36, 1–14. https://doi.org/10.1016/j.electstud.2014.06.004
+
+Stokes, D. E. (1963). Spatial models of party competition. *American Political Science Review*, 57(2), 368–377. https://doi.org/10.2307/1952828
 
