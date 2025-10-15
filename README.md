@@ -1,7 +1,11 @@
-# Descripción de Proyecto - ICP5006
+# Efecto del desempleo comunal sobre el voto opositor en Chile: un análisis electoral 2010–2017
 
-## 1. Tema del proyecto
-La influencia del desempleo comunal en el comportamiento electoral presidencial en Chile (2010–2017): un análisis del voto de castigo y apoyo en contextos de alternancia política y transformaciones laborales.
+Entrega 1: Descripción de Proyecto 
+Curso: ICP5006
+Integrantes: 
+
+## 1. Introducción
+La relación entre condiciones económicas locales y decisiones electorales constituye un tema central en la ciencia política, especialmente en el análisis del voto económico. En Chile, los periodos previos y posteriores a las elecciones presidenciales de 2013 y 2017 se caracterizaron por fluctuaciones en las tasas de desempleo comunal y por una alternancia entre coaliciones en el poder. Este proyecto se centra en examinar cómo las variaciones en la tasa de desempleo a nivel comunal influyen en la probabilidad de que los ciudadanos voten por candidatos de oposición, considerando tanto el efecto de castigo hacia el gobierno en funciones como la respuesta de apoyo ante contextos de bonanza económica. Mediante un análisis cuantitativo longitudinal, se busca identificar patrones consistentes que permitan comprender la interacción entre economía local y comportamiento electoral, contribuyendo a la discusión sobre los determinantes del voto en democracias consolidadas y emergentes.
 
 ## 2. Objetivo
 Analizar cómo las variaciones en la tasa de desempleo comunal influyen en la probabilidad de que los electores voten por candidatos presidenciales de oposición en Chile entre 2010 y 2017, examinando si los cambios en las condiciones laborales previas a las elecciones de 2013 y 2017 se asocian con un voto de castigo o de apoyo hacia el gobierno en ejercicio, en un contexto de alternancia política y transformaciones estructurales del mercado laboral. 
