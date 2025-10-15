@@ -159,7 +159,7 @@ Se estimarán modelos de regresión lineal múltiple (OLS) y modelos de panel co
 
 Los resultados se presentarán mediante tablas de coeficientes, intervalos de confianza y gráficos comparativos que ilustren la relación entre desempleo y comportamiento electoral. Esta etapa permitirá comunicar de manera clara y precisa los hallazgos del estudio, facilitando la interpretación de los efectos estimados y su relevancia para la pregunta de investigación.
 
-## 9. Referencias
+## 8. Referencias
 
 Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. 
 
