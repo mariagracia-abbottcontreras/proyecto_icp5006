@@ -36,14 +36,38 @@ Pese a este avance, la mayoría de los estudios sobre voto económico en Chile s
 El período comprendido entre 2010 y 2017 ofrece una oportunidad analítica relevante para examinar este vínculo. Durante estos años, Chile experimentó alternancia política entre coaliciones, fluctuaciones en las tasas de desempleo y episodios de desaceleración económica. Observar cómo evolucionan las tasas de desocupación comunal antes y después de las elecciones presidenciales de 2013 y 2017 permite evaluar si el deterioro del mercado laboral se asocia con un voto de castigo hacia el gobierno o, por el contrario, con la mantención del apoyo oficialista. 
 
 En síntesis, el problema que motiva esta investigación radica en la escasa evidencia empírica sobre el impacto territorial del desempleo en el comportamiento electoral chileno. A diferencia de los enfoques centrados en percepciones nacionales o individuales, este estudio busca examinar cómo las condiciones económicas locales inciden en la probabilidad de votar por la oposición, contribuyendo a una comprensión más desagregada y contextual del voto económico en Chile contemporáneo. 
+
 ## 6. Marco teórico
 
 
 ## 7. Metodología
+La investigación adoptará un enfoque cuantitativo con un diseño longitudinal a nivel comunal, abarcando el período 2010–2017, que comprende las elecciones presidenciales de 2013 y 2017. Este rango temporal permite analizar cómo las variaciones en la tasa de desempleo comunal en los años previos y posteriores a cada elección se relacionan con el comportamiento electoral frente a los candidatos de oposición, considerando ciclos políticos y económicos recientes.
 
-### 7.1 Unidad de análisis y variables
+El enfoque cuantitativo es apropiado dado que la investigación busca medir la magnitud y dirección del efecto del desempleo sobre el voto opositor, estableciendo relaciones sistemáticas entre variables a lo largo del tiempo.
 
-### 7.2 Estrategia analítica
+### 7.1 Unidad de análisis
+Unidad principal: Comuna.
+
+Justificación: La comuna constituye la unidad territorial básica de Chile con disponibilidad de datos tanto de empleo como de resultados electorales. Su nivel desagregado permite capturar variaciones locales en la economía y en las preferencias políticas que no serían visibles a nivel regional o nacional. Analizar la comuna permite evaluar si los cambios en las condiciones laborales locales se asocian con un voto de castigo o apoyo hacia el gobierno en ejercicio, abordando directamente la pregunta y los objetivos de la investigación.
+
+### 7.2 Variables
+
+- **Variable dependiente**: Porcentaje de votación por el candidato de oposición en cada elección presidencial.
+
+- **Variable independiente principal**: Tasa de desempleo comunal promedio del año electoral.
+
+- **Variables de control**:
+      - Población total de la comuna
+      - Densidad poblacional
+      - Ruralidad (proporción de población rural)
+      - Región
+      - Proporción de mujeres
+      - Nivel educativo promedio
+      - Nivel de ingresos promedio
+
+Estas variables controlan factores sociodemográficos y territoriales que podrían influir en el comportamiento electoral y permiten aislar el efecto específico del desempleo.
+
+### 7.3 Estrategia analítica
 Se aplicarán modelos de regresión lineal múltiple (OLS) para estimar el efecto del desempleo comunal sobre el voto por la oposición. 
 Para fortalecer la validez del análisis, se incluirán efectos fijos por región y año, con el fin de controlar diferencias estructurales y coyunturales entre territorios y ciclos electorales. 
 El análisis se desarrollará en dos etapas:
