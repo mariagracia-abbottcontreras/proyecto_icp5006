@@ -137,7 +137,7 @@ El modelo estimado es el siguiente:
 
 **Integración de las bases de datos:**
 
-Para integrar ambas bases de datos, se utilizará el **identificador único de cada comuna**, lo que permitirá asegurar la coherencia tanto territorial como temporal de la información. Este proceso implicará la normalización de los nombres de las comunas, la estandarización de la codificación de las regiones y la homogenización de los formatos de las distintas variables, garantizando que todos los datos sean compatibles y comparables entre sí. Una vez realizada esta integración y depuración, se construirá un **panel de datos comunal para el período 2010–2017**, que servirá como base para el análisis estadístico. Este panel permitirá evaluar cómo las variaciones en la tasa de desempleo comunal se asocian con los cambios en el voto por la oposición, controlando al mismo tiempo por factores sociodemográficos y territoriales, y asegurando que los resultados reflejen relaciones consistentes y confiables entre las variables de interés.
+Para integrar las tres bases de datos, se utilizará el **identificador único de cada comuna**, lo que permitirá asegurar la coherencia tanto territorial como temporal de la información. Este proceso implicará la normalización de los nombres de las comunas, la estandarización de la codificación de las regiones y la homogenización de los formatos de las distintas variables, garantizando que todos los datos sean compatibles y comparables entre sí. Una vez realizada esta integración y depuración, se construirá un **panel de datos comunal para el período 2010–2017**, que servirá como base para el análisis estadístico. Este panel permitirá evaluar cómo las variaciones en la tasa de desempleo comunal se asocian con los cambios en el voto por la oposición, controlando al mismo tiempo por factores sociodemográficos y territoriales, y asegurando que los resultados reflejen relaciones consistentes y confiables entre las variables de interés.
 
 ### 7.3 Estrategia analítica
 El análisis se realizará en dos etapas complementarias:
@@ -158,7 +158,7 @@ El análisis de los datos se realizará siguiendo un procedimiento estructurado 
 
 **Paso 1: Selección y depuración de bases de datos**
 
-Se integrarán la base de ocupación y desocupación del INE y la base de resultados presidenciales del Servel mediante el identificador único de cada comuna. Durante este proceso se normalizarán los nombres de las comunas, se estandarizará la codificación de las regiones y se homogenizarán los formatos de las variables. El objetivo de esta etapa es asegurar la coherencia territorial y temporal de los datos, garantizando que cada registro comunal corresponda correctamente entre ambas fuentes y que los datos sean comparables.
+Se integrarán las tres bases especificadas mediante el identificador único de cada comuna. Durante este proceso se normalizarán los nombres de las comunas, se estandarizará la codificación de las regiones y se homogenizarán los formatos de las variables. El objetivo de esta etapa es asegurar la coherencia territorial y temporal de los datos, garantizando que cada registro comunal corresponda correctamente entre las tres fuentes y que los datos sean comparables.
 
 **Paso 2: Construcción del panel comunal**
 
