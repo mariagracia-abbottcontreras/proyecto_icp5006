@@ -101,6 +101,10 @@ Archivo: resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx
 
 Por su parte, la base de datos de resultados presidenciales del Servicio Electoral (Servel), contenida en el archivo resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx, registra el porcentaje de votación obtenido por cada candidato presidencial a nivel comunal para las elecciones de 2013 y 2017. Esta información permite medir la **variable dependiente**, es decir, el voto por los candidatos de oposición en cada comuna, que constituye el foco principal de esta investigación. Gracias a la desagregación comunal de los datos, es posible analizar de manera precisa la relación entre las condiciones económicas locales y las preferencias electorales, garantizando un vínculo directo entre las variables de interés y la unidad de análisis definida en el estudio.
 
+3. **Base de datos del Sistema Nacional de Información Municipal (SINIM)**  
+
+La base de datos del **Sistema Nacional de Información Municipal (SINIM)**, administrada por la Subsecretaría de Desarrollo Regional y Administrativo (SUBDERE), reúne información estadística y financiera de los municipios chilenos. Esta fuente proporciona **datos múltiples a nivel comunal**, tales como presupuesto, personal, servicios, infraestructura y características socioeconómicas, los cuales serán utilizados como **covariables de control** en el análisis. Gracias a su nivel de desagregación y cobertura temporal, el SINIM permite incorporar dimensiones estructurales y de gestión municipal que complementan la interpretación de los resultados electorales y las condiciones económicas locales.
+
 **Variables consideradas**:
 
 - **Variable dependiente**: Porcentaje de votación por el candidato de oposición en cada elección presidencial.
