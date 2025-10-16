@@ -107,6 +107,22 @@ La base de datos del **Sistema Nacional de Información Municipal (SINIM)**, adm
 
 **Variables consideradas**:
 
+### Modelo econométrico
+
+La relación entre el voto por la oposición y las condiciones económicas locales se especifica mediante el siguiente modelo:
+
+\[
+\text{OppoVote}_{i,t} = \beta_0 + \beta_1 \, \Delta \text{Desempleo}_{i,t} + \beta_2 \, \mathbf{Z}_{i,t} + \varepsilon_{i,t}
+\]
+
+**Donde:**
+
+- \(\text{OppoVote}_{i,t}\): porcentaje de votación por el candidato de oposición en la comuna *i* en la elección presidencial *t*.  
+- \(\Delta \text{Desempleo}_{i,t}\): diferencia del desempleo entre los periodos *t* y *t−1* (cambio temporal del desempleo).  
+- \(\mathbf{Z}_{i,t}\): conjunto de covariables de control.  
+- \(\beta_0\), \(\beta_1\) y \(\beta_2\): coeficientes del modelo.  
+- \(\varepsilon_{i,t}\): término de error.  
+
 - **Variable dependiente**: Porcentaje de votación por el candidato de oposición en cada elección presidencial.
 
 - **Variable independiente principal**: Tasa de desempleo comunal promedio del año electoral.
