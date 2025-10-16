@@ -107,19 +107,6 @@ La base de datos del **Sistema Nacional de Información Municipal (SINIM)**, adm
 
 **Variables consideradas**:
 
-### Modelo econométrico
-
-El modelo estimado es el siguiente:
-
-**OppoVoteᵢ,ₜ = β₀ + β₁·ΔDesempleoᵢ,ₜ + β₂·Zᵢ,ₜ + εᵢ,ₜ**
-
-**Donde:**
-- *OppoVoteᵢ,ₜ*: porcentaje de votación por el candidato de oposición en la comuna *i* en la elección presidencial *t*.  
-- *ΔDesempleoᵢ,ₜ*: diferencia del desempleo entre los periodos *t* y *t−1* (cambio temporal del desempleo).  
-- *Zᵢ,ₜ*: conjunto de covariables de control.  
-- *β₀*, *β₁*, *β₂*: coeficientes del modelo.  
-- *εᵢ,ₜ*: término de error.
-
 - **Variable dependiente**: Porcentaje de votación por el candidato de oposición en cada elección presidencial.
 
 - **Variable independiente principal**: Tasa de desempleo comunal promedio del año electoral.
@@ -134,6 +121,19 @@ El modelo estimado es el siguiente:
    - Nivel de ingresos promedio
 
 Estas variables de control permiten aislar el efecto del desempleo sobre el voto opositor, considerando factores sociodemográficos y territoriales que podrían influir en la conducta electoral.
+
+**Modelo econométrico**:
+
+El modelo estimado es el siguiente:
+
+**OppoVoteᵢ,ₜ = β₀ + β₁·ΔDesempleoᵢ,ₜ + β₂·Zᵢ,ₜ + εᵢ,ₜ**
+
+**Donde:**
+- *OppoVoteᵢ,ₜ*: porcentaje de votación por el candidato de oposición en la comuna *i* en la elección presidencial *t*.  
+- *ΔDesempleoᵢ,ₜ*: diferencia del desempleo entre los periodos *t* y *t−1* (cambio temporal del desempleo).  
+- *Zᵢ,ₜ*: conjunto de covariables de control.  
+- *β₀*, *β₁*, *β₂*: coeficientes del modelo.  
+- *εᵢ,ₜ*: término de error.
 
 **Integración de las bases de datos:**
 
