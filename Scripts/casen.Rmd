@@ -1,0 +1,467 @@
+---
+title: "casen"
+output: html_document
+date: "2025-11-02"
+---
+
+## SELECCIONAR Y ARMONIZAR INFO 
+```{r}
+# --- Dependencias ---
+if (!requireNamespace("haven", quietly = TRUE)) install.packages("haven")
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+
+library(haven)
+library(dplyr)
+
+# --- Utilidades ---
+# Encuentra la PRIMERA coincidencia exacta ignorando mayúsculas/minúsculas
+find_col <- function(df, candidates) {
+  nms <- names(df); nms_low <- tolower(nms)
+  for (cand in tolower(candidates)) {
+    hit <- which(nms_low == cand)
+    if (length(hit) == 1) return(nms[hit])
+  }
+  NULL
+}
+
+# Convierte a etiqueta (si es labelled) o a carácter si no tiene etiquetas
+to_label_char <- function(x) {
+  # Si viene con etiquetas (haven::labelled) usamos esas etiquetas
+  if (inherits(x, "labelled") || !is.null(attr(x, "labels"))) {
+    as.character(haven::as_factor(x, levels = "labels"))
+  } else {
+    as.character(x)
+  }
+}
+
+# Selecciona y estandariza por año, y crea com_caracter
+select_and_standardize <- function(df, year) {
+  # candidatos por tema
+  cand_comuna  <- c("comuna", "comu")  # 2022 descartado
+  cand_esc     <- c("esc")
+  cand_educ    <- c("educ")
+  cand_ytotaj  <- c("ytotaj")
+  cand_ytotcor <- c("ytotcor")
+
+  v_comuna   <- find_col(df, cand_comuna)
+  v_esc      <- find_col(df, cand_esc)
+  v_educ     <- find_col(df, cand_educ)
+  v_ytotaj   <- find_col(df, cand_ytotaj)
+  v_ytotcor  <- find_col(df, cand_ytotcor)
+
+  # regla de ingreso por año
+  v_ingreso <- if (year %in% c(2003, 2009, 2013)) {
+    if (!is.null(v_ytotaj)) v_ytotaj else v_ytotcor
+  } else if (year == 2017) {
+    if (!is.null(v_ytotcor)) v_ytotcor else v_ytotaj
+  } else NULL
+
+  vars_keep <- unique(na.omit(c(v_comuna, v_esc, v_educ, v_ingreso)))
+  if (length(vars_keep) == 0) {
+    warning(sprintf("No se encontraron variables esperadas en year=%s", year))
+    return(tibble(year = year))
+  }
+
+  out <- df %>% select(all_of(vars_keep))
+
+  # renombrar estándar
+  std_names <- names(out)
+  if (!is.null(v_comuna))  std_names[std_names == v_comuna]  <- "comuna_id"
+  if (!is.null(v_esc))     std_names[std_names == v_esc]     <- "esc"
+  if (!is.null(v_educ))    std_names[std_names == v_educ]    <- "educ"
+  if (!is.null(v_ingreso)) std_names[std_names == v_ingreso] <- "ingreso_total"
+  names(out) <- std_names
+
+  # crear com_caracter desde la etiqueta del código de comuna
+  if (!is.null(v_comuna)) {
+    out <- out %>%
+      mutate(
+        com_caracter = to_label_char(.data[["comuna_id"]])
+      )
+  } else {
+    out <- out %>% mutate(com_caracter = NA_character_)
+  }
+
+  # agregar year
+  out %>% mutate(year = year, .before = 1L)
+}
+
+# --- Loop principal: leer y procesar solo 2003, 2009, 2013, 2017 ---
+dta_files <- list.files(pattern = "^casen_\\d{4}\\.dta$", full.names = TRUE)
+
+# filtrar años permitidos (excluye 2022)
+years_ok <- c(2003, 2009, 2013, 2017)
+dta_files <- dta_files[
+  sub("^casen_(\\d{4})\\.dta$", "\\1", basename(dta_files)) %in% years_ok
+]
+
+if (length(dta_files) == 0) {
+  message("No se encontraron archivos casen_YYYY.dta (2003, 2009, 2013, 2017) en el directorio actual.")
+}
+
+for (f in dta_files) {
+  obj_name <- tools::file_path_sans_ext(basename(f))              # p.ej., "casen_2003"
+  year_int <- as.integer(sub("^casen_(\\d{4})$", "\\1", obj_name))
+
+  message("Leyendo: ", f)
+  df <- haven::read_dta(f)
+
+  df_sel <- select_and_standardize(df, year_int)
+
+  assign(obj_name, df_sel, envir = .GlobalEnv)
+
+  message(sprintf("✓ %s -> columnas: %s",
+                  obj_name, paste(names(df_sel), collapse = ", ")))
+}
+
+# --- (Opcional) Ver qué quedó ---
+invisible(
+  lapply(ls(pattern = "^casen_(2003|2009|2013|2017)$"), function(x) {
+    cat("\n---", x, "---\n")
+    print(dplyr::glimpse(get(x), width = 80))
+  })
+)
+
+# --- Mantener solo los objetos que comienzan con "casen"
+rm(list = setdiff(ls(), ls(pattern = "^casen_")))
+
+```
+
+## REVISAR NAs 
+### Por variable 
+```{r}
+# --- Dependencias ---
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+library(dplyr)
+
+# --- Función para calcular % de NAs por variable ---
+na_porcentaje <- function(df) {
+  df %>%
+    summarise(across(
+      everything(),
+      ~ mean(is.na(.)) * 100
+    )) %>%
+    tidyr::pivot_longer(everything(),
+      names_to = "variable",
+      values_to = "porc_na"
+    ) %>%
+    arrange(desc(porc_na))
+}
+
+# --- Aplicar a todas las bases CASEN ---
+bases_casen <- ls(pattern = "^casen_\\d{4}$")
+
+na_resultados <- lapply(bases_casen, function(nombre) {
+  df <- get(nombre)
+  tibble(
+    base = nombre,
+    variable = names(df),
+    porc_na = sapply(df, function(x) mean(is.na(x)) * 100)
+  )
+})
+
+# Combinar resultados en una sola tabla
+na_resumen <- bind_rows(na_resultados)
+
+# --- Mostrar resumen ordenado ---
+na_resumen %>%
+  arrange(base, desc(porc_na)) %>%
+  print(n = 30)   # muestra las 30 primeras filas
+
+# --- (Opcional) Guardar resultados en CSV ---
+# write.csv(na_resumen, "NA_por_variable_casen.csv", row.names = FALSE)
+
+```
+
+
+### Por unidades 
+```{r}
+# --- Dependencias ---
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+library(dplyr)
+
+# --- Identificar las bases CASEN ---
+bases_casen <- ls(pattern = "^casen_\\d{4}$")
+
+# --- Calcular impacto de eliminar NAs ---
+resumen_na <- lapply(bases_casen, function(b) {
+  df <- get(b)
+  n_total <- nrow(df)
+  n_con_na <- sum(!complete.cases(df))
+  n_sin_na <- sum(complete.cases(df))
+  porc_con_na <- 100 * n_con_na / n_total
+  porc_sin_na <- 100 * n_sin_na / n_total
+  
+  tibble(
+    base = b,
+    total_obs = n_total,
+    obs_con_NA = n_con_na,
+    obs_sin_NA = n_sin_na,
+    porc_con_NA = round(porc_con_na, 2),
+    porc_sin_NA = round(porc_sin_na, 2)
+  )
+})
+
+# --- Unir resultados en una tabla ---
+resumen_na <- bind_rows(resumen_na)
+
+# --- Mostrar resumen ---
+resumen_na %>%
+  arrange(base) %>%
+  print(n = Inf)
+
+# --- (Opcional) Guardar en CSV ---
+# write.csv(resumen_na, "resumen_NA_eliminacion.csv", row.names = FALSE)
+
+```
+## REVISAR CORRESPONDENCIA COMUNAS 
+```{r}
+# --- Dependencias ---
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+if (!requireNamespace("tidyr", quietly = TRUE)) install.packages("tidyr")
+if (!requireNamespace("stringr", quietly = TRUE)) install.packages("stringr")
+if (!requireNamespace("stringi", quietly = TRUE)) install.packages("stringi")
+
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(stringi)
+
+# --- 1) Listados por base: codigo ↔ nombre ---
+# Detecta las bases casen_YYYY ya en memoria
+bases_casen <- ls(pattern = "^casen_(2003|2009|2013|2017)$")
+
+# Función para quedarnos con el diccionario por base
+dicc_por_base <- function(df, year){
+  df %>%
+    transmute(
+      year = year,
+      # asume que ya renombraste a 'comuna_id' y 'com_caracter'
+      comuna_id = as.character(.data$comuna_id),
+      com_caracter = as.character(.data$com_caracter)
+    ) %>%
+    distinct(comuna_id, com_caracter, .keep_all = TRUE) %>%
+    arrange(comuna_id)
+}
+
+# Construir lista de diccionarios y un panel unido
+dicc_list <- lapply(bases_casen, function(nm){
+  year <- as.integer(sub("^casen_(\\d{4})$", "\\1", nm))
+  dicc_por_base(get(nm), year)
+})
+
+dicc_panel <- bind_rows(dicc_list)
+
+# (Opcional) Guardar un CSV por año
+# lapply(split(dicc_panel, dicc_panel$year), function(x){
+#   write.csv(x, sprintf("diccionario_comunas_%s.csv", unique(x$year)), row.names = FALSE)
+# })
+
+# --- 2) Chequeo de estabilidad del mapeo en el tiempo ---
+
+## 2a) Vista ancha: una columna por año (fácil de inspeccionar)
+dicc_wide <- dicc_panel %>%
+  select(comuna_id, year, com_caracter) %>%
+  distinct() %>%
+  pivot_wider(names_from = year, values_from = com_caracter)
+
+# Filas donde el nombre cambia entre años (es decir, más de 1 nombre distinto en la fila)
+cambios_por_codigo <- dicc_panel %>%
+  group_by(comuna_id) %>%
+  summarise(
+    n_nombres_distintos = n_distinct(com_caracter, na.rm = TRUE),
+    nombres = paste(sort(unique(na.omit(com_caracter))), collapse = " | "),
+    anios   = paste(sort(unique(year)), collapse = ", "),
+    .groups = "drop"
+  ) %>%
+  filter(n_nombres_distintos > 1) %>%
+  arrange(comuna_id)
+
+## 2b) Casos de un mismo nombre asociado a distintos códigos (posibles desagregaciones/creaciones)
+nombre_a_varios_codigos <- dicc_panel %>%
+  group_by(com_caracter) %>%
+  summarise(
+    n_codigos_distintos = n_distinct(comuna_id, na.rm = TRUE),
+    codigos = paste(sort(unique(na.omit(comuna_id))), collapse = " | "),
+    anios   = paste(sort(unique(year)), collapse = ", "),
+    .groups = "drop"
+  ) %>%
+  filter(n_codigos_distintos > 1) %>%
+  arrange(com_caracter)
+
+# --- 3) (Opcional) Normalización suave de nombres para evitar falsos positivos por tildes/espacios ---
+normaliza_nombre <- function(x){
+  x %>%
+    str_squish() %>%                      # colapsa espacios
+    str_to_title(locale = "es") %>%       # capitaliza
+    stringi::stri_trans_general("Latin-ASCII")  # quita tildes (Valparaiso vs Valparaíso)
+}
+
+dicc_panel_norm <- dicc_panel %>%
+  mutate(com_caracter_norm = normaliza_nombre(com_caracter))
+
+cambios_por_codigo_norm <- dicc_panel_norm %>%
+  group_by(comuna_id) %>%
+  summarise(
+    n_nombres_distintos = n_distinct(com_caracter_norm, na.rm = TRUE),
+    nombres_norm = paste(sort(unique(na.omit(com_caracter_norm))), collapse = " | "),
+    anios = paste(sort(unique(year)), collapse = ", "),
+    .groups = "drop"
+  ) %>%
+  filter(n_nombres_distintos > 1)
+
+# --- 4) Impresiones útiles ---
+cat("\n=== Diccionario por base (primeras filas por año) ===\n")
+dicc_panel %>% group_by(year) %>% slice_head(n = 5) %>% print(n = 20)
+
+cat("\n=== Posibles CAMBIOS de nombre para el MISMO código (sin normalizar) ===\n")
+print(cambios_por_codigo, n = 50)
+
+cat("\n=== Posibles CAMBIOS de nombre para el MISMO código (normalizados) ===\n")
+print(cambios_por_codigo_norm, n = 50)
+
+cat("\n=== Mismo nombre asociado a VARIOS códigos (posibles cambios administrativos) ===\n")
+print(nombre_a_varios_codigos, n = 50)
+
+# --- 5) (Opcional) Exportar resultados
+# write.csv(dicc_wide, "diccionario_comunas_wide.csv", row.names = FALSE)
+# write.csv(cambios_por_codigo, "cambios_por_codigo.csv", row.names = FALSE)
+# write.csv(nombre_a_varios_codigos, "nombre_a_varios_codigos.csv", row.names = FALSE)
+
+```
+
+```{r}
+# --- Dependencias ---
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+if (!requireNamespace("stringr", quietly = TRUE)) install.packages("stringr")
+if (!requireNamespace("purrr", quietly = TRUE)) install.packages("purrr")
+
+library(dplyr)
+library(stringr)
+library(purrr)
+
+# --- Normalizador de nombres de comunas ---
+normaliza_nombre <- function(x) {
+  x %>%
+    str_squish() %>%
+    stringr::str_to_title(locale = "es") %>%
+    stringi::stri_trans_general("Latin-ASCII")
+}
+
+# --- Crear listado de comunas por base ---
+bases_casen <- ls(pattern = "^casen_(2003|2009|2013|2017)$")
+
+listados_comunas <- map(bases_casen, function(nm) {
+  df <- get(nm)
+  year <- as.integer(sub("^casen_(\\d{4})$", "\\1", nm))
+  df %>%
+    transmute(
+      year = year,
+      comuna_id = as.character(comuna_id),
+      com_caracter = normaliza_nombre(as.character(com_caracter))
+    ) %>%
+    distinct()
+}) %>%
+  bind_rows()
+
+# --- Comunas únicas por año ---
+comunas_por_ano <- split(listados_comunas$com_caracter, listados_comunas$year)
+
+# --- 1. Comunas comunes a todos los años ---
+comunas_comunes_todas <- reduce(comunas_por_ano, intersect)
+
+# --- 2. Comunas exclusivas de cada año ---
+comunas_exclusivas <- map(comunas_por_ano, function(x) {
+  setdiff(x, unlist(comunas_por_ano[names(comunas_por_ano) != names(which(comunas_por_ano == x))]))
+})
+
+# --- 3. Comparaciones pares (por ejemplo 2003 vs 2009, etc.) ---
+comparaciones <- combn(names(comunas_por_ano), 2, simplify = FALSE)
+comunas_comunes_pares <- map(comparaciones, function(par) {
+  a1 <- par[1]; a2 <- par[2]
+  comunes <- intersect(comunas_por_ano[[a1]], comunas_por_ano[[a2]])
+  unicas_1 <- setdiff(comunas_por_ano[[a1]], comunas_por_ano[[a2]])
+  unicas_2 <- setdiff(comunas_por_ano[[a2]], comunas_por_ano[[a1]])
+  tibble(
+    comparacion = paste(a1, "vs", a2),
+    n_comunes = length(comunes),
+    n_unicas_a1 = length(unicas_1),
+    n_unicas_a2 = length(unicas_2),
+    comunes = paste(comunes, collapse = ", "),
+    unicas_a1 = paste(unicas_1, collapse = ", "),
+    unicas_a2 = paste(unicas_2, collapse = ", ")
+  )
+}) %>% bind_rows()
+
+# --- 4. Resultados ---
+cat("\n=== Comunas comunes en TODOS los años ===\n")
+print(sort(comunas_comunes_todas))
+
+cat("\n=== Resumen de comparaciones pares ===\n")
+print(comunas_comunes_pares %>% select(comparacion, n_comunes, n_unicas_a1, n_unicas_a2))
+
+cat("\n=== Ejemplo: comunas exclusivas por año ===\n")
+map2(names(comunas_exclusivas), comunas_exclusivas, ~{
+  cat("\n", .x, ": ", length(.y), " comunas exclusivas\n")
+  if (length(.y) > 0) print(head(.y, 10))
+})
+
+```
+
+
+## CALCULAR LAS MEDIAS COMUNALES 
+```{r}
+# Paquetes
+if (!requireNamespace("dplyr", quietly=TRUE)) install.packages("dplyr")
+if (!requireNamespace("stringr", quietly=TRUE)) install.packages("stringr")
+if (!requireNamespace("stringi", quietly=TRUE)) install.packages("stringi")
+library(dplyr); library(stringr); library(stringi); library(purrr)
+
+# Normalizador de nombres (quita tildes/espacios raros y uniforma case)
+norm_nombre <- function(x) {
+  x |>
+    as.character() |>
+    str_replace_all("\\u00A0", " ") |>   # NBSP → espacio normal
+    str_squish() |>
+    str_to_lower(locale = "es") |>
+    stringi::stri_trans_general("Latin-ASCII")  # saca tildes
+}
+
+bases <- ls(pattern = "^casen_(2003|2009|2013|2017)$")
+
+promedios_comunales <- map_dfr(bases, function(b) {
+  df <- get(b)
+  yr <- as.integer(sub("^casen_(\\d{4})$", "\\1", b))
+
+  df %>%
+    mutate(
+      comuna_key = norm_nombre(com_caracter)   # clave limpia para agrupar
+    ) %>%
+    group_by(year = yr, comuna_key) %>%
+    summarise(
+      # nombre “bonito” para mostrar (el primero no NA de ese grupo)
+      com_caracter = first(com_caracter[!is.na(com_caracter)]),
+      promedio_esc     = mean(esc, na.rm = TRUE),
+      promedio_educ    = mean(as.numeric(educ), na.rm = TRUE),
+      promedio_ingreso = mean(as.numeric(ingreso_total), na.rm = TRUE),
+      n = n(),
+      .groups = "drop"
+    ) %>%
+    distinct(year, comuna_key, .keep_all = TRUE)  # 1 fila por comuna-año
+})
+
+# Chequeo: debe ser único por (year, comuna_key)
+stopifnot(!any(duplicated(promedios_comunales[c("year","comuna_key")])))
+
+promedios_comunales <- promedios_comunales %>%
+  arrange(year, comuna_key)
+
+
+
+```
+
+## EXPORTAR 
+```{r}
+writexl::write_xlsx(promedios_comunales, "casen_comunal.xlsx")
+```
+
