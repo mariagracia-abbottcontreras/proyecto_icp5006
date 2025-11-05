@@ -1,0 +1,113 @@
+---
+title: "01_df_SINIM"
+output: html_document
+date: "2025-11-05"
+---
+
+# 0. Configuración inicial y carga de paquetes
+
+```{r}
+rm(list = ls())
+library(readxl) #permite leer archivos de Excel (.xlsx)
+library(tidyverse) #agrupa paquetes y permite manipulación de datos
+library(stringr) #facilita operaciones con cadenas de texto, útil para nombres de comunas
+library(dplyr) #manipulación y transformación de datos
+library(tidyr) #organización y reestructuración de datos
+library(stringi)   #manejo avanzado de texto (quitar acentos)
+
+```
+
+# 1. Leer archivo de Excel
+```{r}
+df_0 <- read_excel("C:/Users/Marita Abbott/Documents/R/R Magister/Proyecto_local/proyecto_icp5006/00_data/datos_comunales_SINIM.xlsx", skip = 3, col_names = FALSE)
+```
+
+# 2. Asignar manualmente los nombres a las respectivas columnas
+```{r}
+#Definimos los años en orden descendente (como en el archivo)
+años <- 2017:2010
+
+#Con eso, asignamos nombres a las columnas
+colnames(df_0) <- c(
+  "codigo", "comuna",
+  paste("densidad_pob", años, sep = "_"),
+  paste("poblacion_tot", años, sep = "_"), 
+  paste("porc_femenina", años, sep = "_"),
+  paste("porc_rural", años, sep = "_")
+)
+
+#Revisamos los nombres de las columnas
+colnames(df_0)
+```
+
+# 3. Limpiar los datos
+```{r}
+df_1 <- df_0 %>%
+  mutate(
+    codigo = as.numeric(codigo),  # Código como texto (por si es numérico pero mejor como ID)
+    across(starts_with("densidad_"), as.numeric),
+    across(starts_with("poblacion_"), as.numeric),
+    across(starts_with("porc_femenina_"), as.numeric),
+    across(starts_with("porc_rural_"), ~ ifelse(.x == "No Recepcionado", NA, as.numeric(.x)))
+  ) %>%
+  filter(!is.na(codigo))
+
+summary(df_1)
+
+```
+
+
+# 4. Reestructurar a formato largo
+```{r}
+df_2 <- df_1 %>%
+  pivot_longer(
+    cols = -c(codigo, comuna),  # Todas excepto ID's
+    names_to = c(".value", "año"),
+    names_pattern = "(.*)_(\\d+)",  # Patrón: variable_año
+    values_drop_na = FALSE  # Mantiene NA's si quieres analizarlos
+  ) %>%
+  mutate(año = as.integer(año))
+```
+
+# 5. Ordenar el resultado
+```{r}
+df_completa <- df_2 %>%
+  arrange(comuna, año) %>%
+  select(codigo, comuna, año, densidad_pob, poblacion_tot, porc_femenina, porc_rural)  # Orden de columnas deseado
+
+head(df_completa)
+```
+
+
+# 6. Limpiar las observaciones
+```{r}
+df_final <- df_completa |> 
+  mutate(
+    comuna = comuna |> 
+      str_to_lower() |> 
+      stri_trans_general("Latin-ASCII") |> 
+      str_trim() |> 
+      str_squish()
+         )
+
+head(df_final)
+```
+
+# 7. Importar base madre
+```{r}
+
+
+df_final |> 
+  anti_join(ENE_2010_2017_full_vadjust, by = "comuna") |> 
+  select(comuna) |> 
+  pull()
+```
+# por codigo
+```{r}
+
+
+df_final |> 
+  anti_join(ENE_2010_2017_full_vadjust, by = "codigo") |> 
+  select(codigo) |> 
+  pull()
+```
