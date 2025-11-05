@@ -9,5 +9,105 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Librerias
+
+```{r}
+library(readxl)
+library(here)
+library(janitor)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+```
+
+## Cargar base de datos
+
+```{r}
+df_presidenciales <- read_excel(
+  here("00_data", "resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx")
+)
+```
+
+
+## Limpiar bases
+
+```{r}
+#Limpiar nombres de variables
+df_presidenciales <- df_presidenciales %>%
+  janitor::clean_names()
+  colnames(df_presidenciales)
+
+summary(df_presidenciales)
+```
+
+
+```{r}
+colnames(df_presidenciales)
+```
+
+## Transformar variables
+
+1. Seleccionar variables relevantes: ano_de_eleccion, periodo, region, comuna, candidato_a, electo_a y votos_totales desde la base original df_presidenciales.
+
+2. Filtrar años de interés: Se seleccionan únicamente las elecciones presidenciales de los años 2013 y 2017.
+
+3. Procesar cada elección por separado:
+
+  - Para 2013, se agrupan los datos por region, comuna y candidato_a, sumando los votos obtenidos por cada candidato en cada comuna.
+  - Se calcula el total de votos comunales (sumando los votos de todos los candidatos de esa elección).
+  - Luego, se filtra solo a Michelle Bachelet Jeria, candidata electa en 2013.
+  - Se calcula el porcentaje de votos obtenidos por comuna en relación con el total comunal.
+  - Finalmente, se agrega la variable ano_de_eleccion = 2013.
+  - Para 2017, se repite el mismo procedimiento, filtrando posteriormente solo a Sebastián Piñera Echenique, candidato electo en esa elección, y se agrega ano_de_eleccion = 2017.
+  
+4. Unir bases procesadas: Se combinan ambas tablas (bachelet_2013 y pinera_2017) en una sola base final utilizando bind_rows().
+
+5. Ordenar observaciones: La base final (df_presidenciales_clean) se ordena por region, comuna y ano_de_eleccion para facilitar la comparación territorial y temporal.
+
+
+```{r}
+# ---- ELECCIÓN 2013 ----
+bachelet_2013 <- df_presidenciales %>%
+  filter(ano_de_eleccion == 2013) %>%
+  group_by(region, comuna, candidato_a) %>%
+  summarise(votos_obtenidos = sum(votos_totales, na.rm = TRUE), .groups = "drop") %>%
+  group_by(region, comuna) %>%
+  mutate(total_de_votos = sum(votos_obtenidos, na.rm = TRUE)) %>%
+  ungroup() %>%
+  filter(candidato_a == "MICHELLE BACHELET JERIA") %>%
+  mutate(
+    porcentaje_votos = round((votos_obtenidos / total_de_votos) * 100, 1),
+    ano_de_eleccion = 2013
+  ) %>%
+  select(ano_de_eleccion, region, comuna, candidato_a, votos_obtenidos, total_de_votos, porcentaje_votos)
+
+# ---- ELECCIÓN 2017 ----
+pinera_2017 <- df_presidenciales %>%
+  filter(ano_de_eleccion == 2017) %>%
+  group_by(region, comuna, candidato_a) %>%
+  summarise(votos_obtenidos = sum(votos_totales, na.rm = TRUE), .groups = "drop") %>%
+  group_by(region, comuna) %>%
+  mutate(total_de_votos = sum(votos_obtenidos, na.rm = TRUE)) %>%
+  ungroup() %>%
+  filter(candidato_a == "SEBASTIAN PIÑERA ECHENIQUE") %>%
+  mutate(
+    porcentaje_votos = round((votos_obtenidos / total_de_votos) * 100, 1),
+    ano_de_eleccion = 2017
+  ) %>%
+  select(ano_de_eleccion, region, comuna, candidato_a, votos_obtenidos, total_de_votos, porcentaje_votos)
+
+# ---- UNIR AMBAS BASES ----
+df_presidenciales_clean <- bind_rows(bachelet_2013, pinera_2017)
+```
+
+# ORDEN DE BASE
+
+```{r}
+
+df_presidenciales_clean <- df_presidenciales_clean %>%
+  arrange(region, comuna, ano_de_eleccion)
+```
+
+
+
 
