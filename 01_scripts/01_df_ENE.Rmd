@@ -1,0 +1,516 @@
+---
+title: "predata"
+output: html_document
+date: "2025-11-01"
+---
+
+# 0. Configuración inicial y carga de paquetes
+
+```{r}
+rm(list = ls())
+library(haven) #permite leer archivos de Stata (.dta)
+library(readxl) #permite leer archivos de Excel (.xlsx)
+library(tidyverse) #agrupa paquetes y permite manipulación de datos
+library(stringr) #facilita operaciones con cadenas de texto, útil para nombres de comunas
+library(purrr) #permite aplicar funciones de forma funcional, útil para mapear listas
+library(dplyr) #manipulación y transformación de datos
+library(tidyr) #organización y reestructuración de datos
+library(stringi)   #manejo avanzado de texto (quitar acentos)
+library(zoo)  #funciones para series temporales (`na.locf` para arrastrar último valor conocido).
+
+```
+
+
+# 1, Importación de bases ENE
+
+```{r}
+files <- list.files(pattern = "\\.dta$", ignore.case = TRUE)
+obj_names <- paste0("ENE", str_extract(files, "(?<!\\d)(20\\d{2})(?!\\d)"))
+```
+- Busca en el director de trabajo todos los archivos terminados en .dta, que corresponden a las bases ENE en nuestro caso.
+
+- Se usa una expresión regular para extraer el año de cada nombre de archivo.
+
+- Se crean nombres de objeto del tipo `ENE2010`, `ENE2011`, etc., según el año.
+
+```{r}
+# Manejo por si algún archivo no calza o repite año:
+valid <- !is.na(obj_names)
+files <- files[valid]
+obj_names <- make.unique(obj_names[valid], sep = "_")  # ENE2017, ENE2017_1, etc.
+```
+- Filtra solo los archivos que sí tienen año válido (elimina los NA)
+
+- Si hay años repetidos agrega sufijos como`_1`
+
+```{r}
+# Leer e inyectar en GlobalEnv
+dta_list <- set_names(files, obj_names) |> map(read_dta)
+list2env(dta_list, envir = .GlobalEnv)
+```
+- Lee cada archivo como un data frame, para luego guardarlos con el nombre correspondiente (ej: ENE2010) directamente en el entorno global
+
+
+# 2. Versión "Raw" (No ponderada)
+
+## 2.1 Limpieza y procesamiento de ENE - Versión "Raw" (No ponderada)
+En esta sección, se calcularán la proporción comunal de desempleo por año, sin usar todavía ponderadores. Para mayor explicación acerca de los ponderadores y la toma de decisiones, se recomienda revisar el READme asignado a este Rmd.
+
+### a) Creación de función auxiliar
+
+```{r}
+# -- Normaliza la etiqueta de comuna (desde r_p_c) a un string "limpio"
+normalize_commune <- function(x) {
+  x |>
+    as.character() |>
+    stringi::stri_trans_general("Latin-ASCII") |>
+    str_to_lower() |>
+    str_replace_all("[^a-z0-9]+", "")
+}
+```
+- Se toma el nombre de comuna (etiquetado en la variable r_p_c)
+
+- Luego, se convierte en texto plano, sin tildes ni caracteres especiales, minúsculas y sin espacios ni signos-
+
+### b) Detectar las bases ENE
+
+```{r}
+enes <- ls(pattern = "^ENE\\d{4}$")
+# Guardaremos los nombres de los resúmenes anuales creados
+summary_names <- character(0)
+```
+- Se crea una lista con todos los objetos en el entorno que corresponden a ENE2010, ENE2011.
+
+### c) Loop por cada año y cálculo proporción comunal anual
+
+#### HACER TABLITA DE ESTO
+activ :: 1 ocupados, 2 desocupados, 3 fuera de la fuerza de trabajo [se elige la categoria 2]
+La información está medida por trimestres móviles, por lo que se debe calcular la proporción por trimestre móvil y luego promediar, dado que necesitamos usar el factor de expansion por trimestre movil 
+
+```{r}
+for (nm in enes) {
+
+  df_raw <- get(nm) 
+
+  # --- Selección y recodificación base ---
+  df <- df_raw %>%
+    select(
+      ano_encuesta,   # año de la encuesta
+      r_p_c,          # código de comuna (con etiquetas)
+      activ           # condición de actividad (1=ocupado, 2=desocupado, 3=fuera de la fuerza laboral, otros)
+    ) %>%
+    mutate(
+      # Conservar 1/2/3 y pasar el resto a NA (evita ruido de códigos especiales)
+      activ = ifelse(activ %in% c(1L, 2L, 3L), activ, NA_integer_),
+
+      # Etiqueta legible de comuna + versión normalizada (genera el nombre limpio de comuna)
+      com_caracter = normalize_commune(as_factor(r_p_c, levels = "labels", ordered = FALSE)),
+
+      # Creación de una variable binaria `desocupado` (Indicador 0/1 de desocupación (1 si activ==2; 0 en caso contrario; NA si activ==NA)
+      desocupado = as.numeric(activ == 2L)
+    )
+
+  # Cálculo de la tasa de desocupación por comuna y año (simple, sin ponderar) 
+  resumen_anual <- df %>%
+    group_by(ano_encuesta, r_p_c, com_caracter) %>%
+    summarise(
+      prop_desocup_anual = mean(desocupado, na.rm = TRUE),  # proporción simple
+      n_obs              = sum(!is.na(desocupado)),         # guarda tamaño muestral bruto (opcional)
+      .groups = "drop"
+    ) %>%
+    arrange(ano_encuesta, com_caracter)
+
+  # Guarda cada tabla resultante como "summary_ENEXX"
+  summary_nm <- paste0("summary_", nm)
+  assign(summary_nm, resumen_anual, envir = .GlobalEnv)
+  summary_names <- c(summary_names, summary_nm)
+}
+```
+- Este loop ejecuta de forma automática la limpieza y el cálculo de la tasa de desocupación comunal anual sin ponderar, a partir de las bases originales de la ENE. Para cada año, selecciona las variables clave, estandariza los nombres de las comunas, crea una variable binaria de desocupación y calcula la proporción simple de personas desempleadas en cada comuna. El resultado son tablas anuales homogéneas que permiten comparar niveles de desempleo entre comunas y preparar la base para posteriores análisis ponderados.
+
+### d) Unión y panel completo
+
+```{r}
+ENE_2010_2017 <- bind_rows(mget(summary_names)) %>%
+  mutate(
+    ano_encuesta = suppressWarnings(as.integer(ano_encuesta)),
+    com_caracter = as.character(com_caracter) |> str_trim()
+  ) %>%
+  arrange(ano_encuesta, com_caracter)
+```
+- Se unen todas las bases anuales, se convierte el año a número entero y se convierte el nombre de comuna en texto, eliminando posibles espacios al inicio o final. Con esto se busca prevenir futuros errores de joins. Por último, se ordena por año y por comuna para tener una estructura ordenada tipo panel.
+
+### e) Código r_p_c "canónico" por comuna
+
+```{r}
+rpc_mode <- ENE_2010_2017 %>%
+  group_by(com_caracter, r_p_c) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(com_caracter) %>%
+  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(com_caracter, r_p_c_mode = r_p_c)
+```
+- En algunas encuestas ENE, los códigos comunales pueden cambiar de año a año (por modificaciones del INE o por errores), este paso busca definir un código único "canónico" (la moda) por comuna. Para ello, se identifica primero el código comunal `(r_c_p)` más frecuente de cada comuna para guardarlo en una tabla auxiliar (`r_p_c_mode`). Esto evita perder comunas al momento de unir.
+
+### f) Grilla completa año x comuna (2010-2017)
+
+```{r}
+years_vec   <- 2010:2017
+comunas_vec <- ENE_2010_2017 %>% distinct(com_caracter) %>% pull()
+
+ENE_2010_2017_full <- ENE_2010_2017 %>%
+  select(ano_encuesta, r_p_c, com_caracter, prop_desocup_anual, n_obs) %>%
+  complete(
+    ano_encuesta = years_vec,
+    com_caracter = comunas_vec
+  ) %>%
+  # Adjuntar r_p_c canónico cuando falte
+  left_join(rpc_mode, by = "com_caracter") %>%
+  mutate(
+    r_p_c = dplyr::coalesce(r_p_c, r_p_c_mode)
+  ) %>%
+  select(ano_encuesta, r_p_c, com_caracter, prop_desocup_anual, n_obs) %>%
+  arrange(com_caracter, ano_encuesta)
+```
+- Para generar un panel balanceado, en el cual aparezcan todas las comunas todos los años se realiza el código anterior. En este se crea un vector con todos los años y las comunas existentes que se desean utilizar, para luego construir una matriz completa, aún cuando en algunos casos haya años sin datos. En caso de faltar información queda como NA. Asimismo, cuando falta el código comunal, se le asigna el "canónico" calculado anteriormente.
+
+## 2.2 Diferencias interanuales y promedios por periodo - Versión "Raw" (No ponderada)
+
+Una vez que se tiene la bases `ENE_2010_2017_full`, que contiene la proporción comunal anual de desempleo (2010-2017), el objetivo de esta sección es medir la variación del desempleo entre años y resumir tendencias por periodos de gobierno. 
+
+En otras palabras, aquí se transforma la tasa de desempleo comunal anual en una medida de cambio interanual y luego en promedios por periodos políticos (2010-2013 y 2014-2017).
+
+### a) Cálculo la diferencia interanual (`laggdiff`)
+```{r}
+ENE_2010_2017_full <- ENE_2010_2017_full %>%
+  group_by(com_caracter) %>%
+  arrange(ano_encuesta, .by_group = TRUE) %>%
+  mutate(
+    prev_prop = dplyr::lag(zoo::na.locf(prop_desocup_anual, na.rm = FALSE)),
+    laggdiff  = ifelse(!is.na(prop_desocup_anual) & !is.na(prev_prop),
+                       prop_desocup_anual - prev_prop, NA_real_)
+  ) %>%
+  ungroup()
+```
+- Se agrupa la base por comuna, porque el cambio se mide dentro de cada comuna.
+
+- Además, se ordena los años en orden ascendente.
+
+- Se calculan dos nuevas variables: 
+  - `prev_prop`: Esta variable guarda el último valor disponible de la tasa de desempleo para esa comuna en el año anterior.
+  - `laggdiff`: Esta variable mide la diferencia entre el año actual y el anterior `(prop_desocup_anual - prep_prop)`. Si no hay dato previo o actual es NA.
+  
+- De esta forma, `laggdiff` muestra como cambia el desempleo año a año en cada comuna.
+
+### b) Definición periodos políticos
+
+```{r}
+ENE_2010_2017_full <- ENE_2010_2017_full %>%
+  mutate(
+    period = dplyr::case_when(
+      ano_encuesta >= 2010 & ano_encuesta <= 2013 ~ "2010-2013",
+      ano_encuesta >= 2014 & ano_encuesta <= 2017 ~ "2014-2017",
+      TRUE ~ NA_character_
+    )
+  )
+```
+- Asigna cada año a un periodo de gobierno:
+  - 2010-2013: primer gobierno de Sebastián Piñera
+  - 2014-2017: segundo gobierno de Michelle Bachelet
+  
+- Esto permite comparar los cambios en el desempleo entre periodos presidenciales.
+
+### c) Calcular promedios por comuna y periodo
+
+```{r}
+ENE_2010_2017_full <- ENE_2010_2017_full %>%
+  group_by(com_caracter, period) %>%
+  mutate(
+    mean_laggdiff_period    = if (all(is.na(laggdiff))) NA_real_ else mean(laggdiff, na.rm = TRUE),
+    n_years_laggdiff_period = sum(!is.na(laggdiff))
+  ) %>%
+  ungroup()
+```
+- Este paso sintetiza la información temporal en una sola cifra por comuna y periodo, permitiendo observar si el desempleo tendió a aumentar o disminuir durante cada gobierno. 
+
+- Para ello, se calcula para cada comuna y periodo:
+  - `mean_laggdiff_period`: el promedio del cambio interanual. Es decir, el promedio de las variaciones de desempleo dentro de ese periodo.
+  - `n_years_laggdiff_period`: cuántos años válidos aportan al cálculo. Esto es útil en caso de que hayan años sin datos.
+  
+### d) Creación de una versión compacta
+
+```{r}
+ENE_2010_2017_compact <- ENE_2010_2017_full %>%
+  filter(!is.na(period)) %>%
+  group_by(com_caracter, period) %>%
+  summarise(
+    mean_laggdiff = if (all(is.na(laggdiff))) NA_real_ else mean(laggdiff, na.rm = TRUE),
+    n_years_used  = sum(!is.na(laggdiff)),
+    .groups = "drop"
+  ) %>%
+  left_join(rpc_mode, by = "com_caracter") %>%
+  rename(r_p_c = r_p_c_mode) %>%
+  arrange(com_caracter, period)
+```
+- Se crea una tabla resumida en la que cada comuna tiene solo dos filas (una por periodo). Esto ya que estamos comparando los dos periodos a nivel comunal.
+
+- Incluye: 
+  - Promedio de variación interanual `mean_laggdiff`.
+  - Número de años usados `n_years_used`.
+  - Código comunal `r_p_c`.
+
+- Esto nos permite generar una base compacta que es ideal para cuando se vinculen los datos de votación o se desarrollen análisis comparativos descriptivos.
+
+# ============================================================
+# Objetos resultantes
+# ============================================================
+# - summary_ENE####            : un data.frame por año con la proporción (año × comuna)
+# - ENE_2010_2017              : todas las proporciones apiladas 2010–2017
+# - ENE_2010_2017_full         : panel 2010–2017 con:
+#                                prev_prop, laggdiff, period,
+#                                mean_laggdiff_period (repetido 4 y 4 por comuna),
+#                                n_years_laggdiff_period
+# - ENE_2010_2017_compact: tabla compacta (2 filas por comuna) con el promedio por periodo
+# ============================================================
+
+## 2.3 Exportar bases - Versión "Raw" (No ponderada)
+
+```{r}
+writexl::write_xlsx(ENE_2010_2017_full, "ENE_2010_2017_full_vraw.xlsx")
+writexl::write_xlsx(ENE_2010_2017_compact, "ENE_2010_2017_compact_vraw.xlsx")
+```
+- Finalmente, se exportan en Excel.
+
+# 3. Versión adjusted (Con ponderados)
+
+Esta versión hace lo mismo que la anterior, pero incorpora el factor de expansión `fact` y la estructura trimestral de la ENE. De esta forma, se transforman las micro-observaciones de la ENE en tasas comunales ponderadas por trimestre, construyendo promedios anuales, armando un panel año x comuna y calculando diferencias interanuales y promedios por periodo político. Así, al incluir el factor de expansión `fact` permite hacer análisis representativos.
+
+## 3.1 Limpieza y procesamiento de ENE - Versión "Adjusted" (Con ponderados)
+
+### a) Creación de funciones auxiliares
+
+```{r}
+# a.1) Normalización de la etiqueta de comuna (desde r_p_c) a un string "limpio"
+normalize_commune <- function(x) {
+  x |>
+    as.character() |>
+    stringi::stri_trans_general("Latin-ASCII") |>
+    str_to_lower() |>
+    str_replace_all("[^a-z0-9]+", "")
+}
+
+# a.2) Media ponderada para variables 0/1 con pesos 'w'
+wmean01 <- function(x01, w) {
+  ok <- !is.na(x01) & !is.na(w)
+  sw <- sum(w[ok])
+  if (sw <= 0) return(NA_real_)
+  sum(w[ok] * x01[ok]) / sw
+}
+```
+a.1) Normalización de la etiqueta de comuna (desde r_p_c) a un string "limpio"
+- Creación de una key comunal homogéneo para limpiar las bases para permitir que los joins sean más robustos y se eviten errores.
+
+a.2) Media ponderada para variables 0/1 con pesos 'w'
+- Creación de una función para calcular la tasa ponderada de variables binarias (como `desocupado`) devolviendo `NA` cuando no hay peso (`w`) positivo en el grupo.
+
+### b) Detectar las bases ENE
+
+```{r}
+enes <- ls(pattern = "^ENE\\d{4}$")
+
+# Para almacenar los nombres de los resúmenes trimestrales creados
+summary_trim_names <- character(0)
+```
+- Se crea una lista con todos los objetos en el entorno que corresponden a ENE2010, ENE2011.
+
+### c) Loop anual y resumen trimestral ponderado
+
+```{r}
+for (nm in enes) {
+
+  df_raw <- get(nm)
+
+  # --- Selección y recodificación base ---
+  #     IMPORTANTE: 'fact' es el factor de expansión (ponderador) que provee la ENE
+  df <- df_raw %>%
+    select(
+      ano_encuesta,   # año de la encuesta (puede venir labelled)
+      r_p_c,          # código de comuna (con etiquetas)
+      activ,          # condición de actividad (1=ocupado, 2=desocupado, 3=fuera FT)
+      mes_central,    # mes central del trimestre móvil (1..12)
+      fact            # factor de expansión (ponderador)
+    ) %>%
+    mutate(
+      # Recodificar activ: conservar 1/2/3 y pasar todo lo demás a NA
+      activ = ifelse(activ %in% c(1L, 2L, 3L), activ, NA_integer_),
+
+      # Etiqueta legible de comuna + versión normalizada para "match" robusto
+      com_caracter = normalize_commune(as_factor(r_p_c, levels = "labels", ordered = FALSE)),
+
+      # Indicador 0/1 de desocupación (1 si activ==2; 0 si activ==1 o 3; NA si activ==NA)
+      desocupado = as.numeric(activ == 2L)
+    )
+
+  # --- Resumen por (año, comuna, mes_central): proporción trimestral ponderada ---
+  #     - prop_desocup_trim: tasa ponderada usando 'fact' DENTRO del trimestre-comuna
+  #     - sum_w_trim/num_w_trim: acumuladores para auditoría (no se usan en el promedio anual simple)
+  #     - n_obs: tamaño muestral bruto (no ponderado) meramente informativo
+  resumen_trim <- df %>%
+    group_by(ano_encuesta, r_p_c, com_caracter, mes_central) %>%
+    summarise(
+      sum_w_trim        = sum(ifelse(!is.na(desocupado) & !is.na(fact), fact, 0), na.rm = TRUE),
+      num_w_trim        = sum(ifelse(!is.na(desocupado) & !is.na(fact), fact * desocupado, 0), na.rm = TRUE),
+      prop_desocup_trim = ifelse(sum_w_trim > 0, num_w_trim / sum_w_trim, NA_real_),
+      n_obs             = sum(!is.na(desocupado)),
+      .groups = "drop"
+    ) %>%
+    arrange(ano_encuesta, com_caracter, mes_central)
+
+  # Crear objeto summaryTrim_ENE#### en el entorno (p. ej., summaryTrim_ENE2010)
+  summary_nm <- paste0("summaryTrim_", nm)
+  assign(summary_nm, resumen_trim, envir = .GlobalEnv)
+  summary_trim_names <- c(summary_trim_names, summary_nm)
+}
+```
+- Este loop automatiza la limpieza y el cálculo de la tasa de desocupación ponderada por trimestre para cada año de la ENE. Para ello, procesa cada base anual, selecciona y depura las variables relevantes, aplica los ponderadores muestrales y genera un resumen comunal-trimestral que refleja la proporción real de desocupación en la población. De este modo, se estandariza y sistematiza el procesamiento de todos los años, permitiendo luego unir los resultados en una sola base comparativa y representativa.
+
+### d) Unir resumenes trimestrales en una tabla única
+```{r}
+ENE_2010_2017_trim <- bind_rows(mget(summary_trim_names)) %>%
+  mutate(
+    ano_encuesta = suppressWarnings(as.integer(ano_encuesta)),
+    com_caracter = as.character(com_caracter) |> str_trim(),
+    mes_central  = suppressWarnings(as.integer(mes_central))
+  ) %>%
+  arrange(ano_encuesta, com_caracter, mes_central)
+```
+- Se crea la base maestra `ENE_2010_2017_trim`, que concentra todos los resultados trimestrales ponderados y los limpia, convirtiendo las variables `ano_encuesta` y `mes_central` a tipo numérica y el nombre de comuna en texto, eliminando posibles espacios al inicio o final. Con esto se busca prevenir futuros errores de joins.
+
+### e) Código `r_p_c` "canónico por comuna
+```{r}
+rpc_mode <- ENE_2010_2017_trim %>%
+  group_by(com_caracter, r_p_c) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(com_caracter) %>%
+  slice_max(order_by = n, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(com_caracter, r_p_c_mode = r_p_c)
+```
+- Se realiza el mismo proceso que en la versión "Raw", pero considerando los trimestres y el factor de expansión. 
+
+### f) Proporción anual por comuna (promedio simple de trimestres observados)
+
+```{r}
+ENE_2010_2017_anual <- ENE_2010_2017_trim %>%
+  group_by(ano_encuesta, com_caracter) %>%
+  summarise(
+    prop_desocup_anual = mean(prop_desocup_trim, na.rm = TRUE),
+    n_trimestres       = sum(!is.na(prop_desocup_trim)),
+    .groups = "drop"
+  ) %>%
+  # Adjuntar r_p_c canónico para cada comuna
+  left_join(rpc_mode, by = "com_caracter") %>%
+  rename(r_p_c = r_p_c_mode) %>%
+  arrange(com_caracter, ano_encuesta)
+```
+- Se agregan las proporciones trimestrales año x comuna, a través de un promedio simple de `(prop_desocup_trim)`. Cada trimestre observado pesa lo mismo en el año (time-average). Se guarda también la cobertura de cuántos trimestres aportaron con `(n_trimestres)`.
+
+### g) Grilla completa año x comuna (panel balanceado)
+
+```{r}
+years_vec   <- 2010:2017
+comunas_vec <- ENE_2010_2017_anual %>% distinct(com_caracter) %>% pull()
+
+ENE_2010_2017_full <- ENE_2010_2017_anual %>%
+  select(ano_encuesta, r_p_c, com_caracter, prop_desocup_anual, n_trimestres) %>%
+  complete(
+    ano_encuesta = years_vec,
+    com_caracter = comunas_vec
+  ) %>%
+  # Volver a adjuntar r_p_c canónico cuando falte
+  left_join(rpc_mode, by = "com_caracter") %>%
+  mutate(
+    r_p_c = dplyr::coalesce(r_p_c, r_p_c_mode)
+  ) %>%
+  select(ano_encuesta, r_p_c, com_caracter, prop_desocup_anual, n_trimestres) %>%
+  arrange(com_caracter, ano_encuesta)
+```
+- Esto nos permite tener un panel uniforme, lo cual facilita la unión con otras bases y realizar operaciones por filas (comunas).
+
+## 3.2 Diferencias interanuales y promedios por periodo - Versión "Adjusted" (Con ponderados)
+
+Esta sección busca profundizar el análisis del desempleo comunal ajustado por ponderadores, examinando cómo evoluciona la tasa de desocupación a lo largo del tiempo y comparando períodos específicos (2010–2013 y 2014–2017). En otras palabras, no solo interesa el valor de la tasa en un año determinado, sino también cuánto varía respecto al año anterior y qué tendencia promedio presenta cada comuna en los distintos períodos del estudio.
+
+### a) Cálculo de diferencias interanuales `(laggdiff)`
+```{r}
+ENE_2010_2017_full <- ENE_2010_2017_full %>%
+  group_by(com_caracter) %>%
+  arrange(ano_encuesta, .by_group = TRUE) %>%
+  mutate(
+    prev_prop = dplyr::lag(zoo::na.locf(prop_desocup_anual, na.rm = FALSE)),
+    laggdiff  = ifelse(!is.na(prop_desocup_anual) & !is.na(prev_prop),
+                       prop_desocup_anual - prev_prop, NA_real_)
+  ) %>%
+  ungroup()
+```
+- Al igual que en la sección "Raw", para cada comuna, se ordenan los datos cronológicamente por año y se compara la tasa ponderada de desempleo de cada año con la del último año previo con dato disponible. 
+
+### b) Definición de periodos políticos
+```{r}
+ENE_2010_2017_full <- ENE_2010_2017_full %>%
+  mutate(
+    period = dplyr::case_when(
+      ano_encuesta >= 2010 & ano_encuesta <= 2013 ~ "2010-2013",
+      ano_encuesta >= 2014 & ano_encuesta <= 2017 ~ "2014-2017",
+      TRUE ~ NA_character_
+    )
+  )
+```
+- Al igual que en la sección anterior, se agrupan los años en los dos grandes intervalos previamente definidos. 
+
+### c) Calcular promedios por comuna y periodo
+```{r}
+ENE_2010_2017_full <- ENE_2010_2017_full %>%
+  group_by(com_caracter, period) %>%
+  mutate(
+    mean_laggdiff_period    = if (all(is.na(laggdiff))) NA_real_ else mean(laggdiff, na.rm = TRUE),
+    n_years_laggdiff_period = sum(!is.na(laggdiff))  # cuántos años con diferencia válida aportan
+  ) %>%
+  ungroup()
+```
+- Al igual que en la sección anterior, una vez definida la variable `(laggdiff)`. se calcula para cada comuna el promedio de las variaciones interanuales dentro de cada periodo.
+
+
+### d) Creación de una versión compacta
+```{r}
+ENE_2010_2017_compact <- ENE_2010_2017_full %>%
+  filter(!is.na(period)) %>%
+  group_by(com_caracter, period) %>%
+  summarise(
+    mean_laggdiff = if (all(is.na(laggdiff))) NA_real_ else mean(laggdiff, na.rm = TRUE),
+    n_years_used  = sum(!is.na(laggdiff)),
+    .groups = "drop"
+  ) %>%
+  left_join(rpc_mode, by = "com_caracter") %>%
+  rename(r_p_c = r_p_c_mode) %>%
+  arrange(com_caracter, period)
+```
+- Al igual que en la versión anterior, se genera una versión compacta con dos filas por comuna (una por periodo), que resume el comportamiento del desempleo en ambos intervalos y facilita comparaciones territoriales y temporales.
+
+# ============================================================
+# Objetos añadidos:
+# - ENE_2010_2017_trim : proporción ponderada de desocupación por (año, comuna, mes_central)
+#                        + sum_w_trim / num_w_trim / n_obs (auditoría/diagnóstico)
+# - ENE_2010_2017_anual: promedio anual (igual peso por trimestre observado) + n_trimestres
+# - ENE_2010_2017_full         : ahora incluye prev_prop, laggdiff, period y mean_laggdiff_period
+# - ENE_2010_2017_compact: tabla compacta (2 filas por comuna) con el promedio por periodo
+# ============================================================
+
+## 3.3 Exportar bases - Versión "Adjusted" (Con ponderados)
+
+```{r}
+writexl::write_xlsx(ENE_2010_2017_full, "ENE_2010_2017_full_vadjust.xlsx")
+writexl::write_xlsx(ENE_2010_2017_compact, "ENE_2010_2017_compact_vadjust.xlsx")
+```
+
