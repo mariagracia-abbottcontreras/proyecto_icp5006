@@ -1,0 +1,13 @@
+---
+title: "01_df_presidenciales"
+author: "Valentina Tesser"
+date: "2025-11-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
