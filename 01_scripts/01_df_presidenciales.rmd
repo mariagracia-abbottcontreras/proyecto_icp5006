@@ -18,6 +18,7 @@ library(janitor)
 library(dplyr)
 library(tidyr)
 library(tidyverse)
+library(writexl)
 ```
 
 ## Cargar base de datos
@@ -26,6 +27,12 @@ library(tidyverse)
 df_presidenciales <- read_excel(
   here("00_data", "resultados_elecciones_presidenciales_ce_1989_2017_Chile.xlsx")
 )
+```
+
+```{r}
+
+df_presidenciales_clean <- read_excel (here ("02_outputs", "df_presidenciales_clean.xlsx"))
+
 ```
 
 
@@ -109,5 +116,94 @@ df_presidenciales_clean <- df_presidenciales_clean %>%
 ```
 
 
+# Normalización de variables de texto
+
+```{r}
+# ---- NORMALIZAR VARIABLES DE TEXTO ----
+
+library(dplyr)
+library(stringi)
+library(stringr)
+
+df_presidenciales_clean <- df_presidenciales_clean %>%
+  mutate(across(where(is.character), ~ .x %>%
+    str_to_lower() %>%                      # todo en minúsculas
+    stringi::stri_trans_general("Latin-ASCII") %>%  # elimina tildes y caracteres especiales
+    str_trim() %>%                          # elimina espacios al inicio y al final
+    str_squish()                            # elimina espacios dobles o múltiples
+  ))
+
+# Mensaje de confirmación
+cat("✅ Variables de texto normalizadas correctamente.\n")
+```
+
+# Verificar unicidad y estructura
+
+Nos aseguramos de que cada fila representa una observación única (una comuna en un año electoral). 
+
+```{r}
+df_presidenciales_clean %>%
+  count(region, comuna, ano_de_eleccion) %>%
+  filter(n > 1)
+```
+
+# Incorporar identificadores territoriales
+
+Buscar codigos (en mi otro directorio)
+
+```{r}
+# Ejemplo: si tienes un diccionario de comunas (dicc_comunas)
+df_presidenciales_clean <- df_presidenciales_clean %>%
+  left_join(dicc_comunas, by = "comuna") %>%
+  relocate(codigo_comuna, .before = region)
+```
+
+# Indicadores adicionales útiles
+
+```{r}
+df_presidenciales_clean <- df_presidenciales_clean %>%
+  mutate(
+    proporcion_votos = votos_obtenidos / total_de_votos)
+```
+
+# Validar tipos de variables
+
+```{r}
+str(df_presidenciales_clean) # 
+
+colSums(is.na(df_presidenciales_clean)) # 
+
+```
+
+
+# Diccionario 
+
+```{r}
+diccionario_df_presidenciales <- tibble::tibble(
+  variable = names(df_presidenciales_clean),
+  descripcion = c(
+    "Año de la elección presidencial",
+    "Código único de comuna (CUT)",
+    "Nombre de la región",
+    "Nombre de la comuna",
+    "Nombre del candidato o candidata",
+    "Votos obtenidos por el candidato/a en la comuna",
+    "Total de votos válidamente emitidos en la comuna",
+    "Porcentaje de votos obtenidos por el candidato/a",
+    "Proporción de votos sobre el total (0 a 1)",
+    "Indicador si el candidato/a fue ganador/a en la comuna",
+    "Periodo presidencial correspondiente"
+  )
+)
+```
+
+
+# Exportar base
+
+```{r}
+library(writexl)
+
+write_xlsx(df_presidenciales_clean, here("02_outputs", "df_presidenciales_clean.xlsx"))
+```
 
 
