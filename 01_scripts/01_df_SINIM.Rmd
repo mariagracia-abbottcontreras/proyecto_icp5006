@@ -95,19 +95,41 @@ head(df_final)
 
 # 7. Importar base madre
 ```{r}
+ENE_2020_2017_full_vadjust1 <- ENE_2010_2017_full_vadjust |> 
+  rename(comuna = com_caracter, codigo = r_p_c)
 
 
-df_final |> 
-  anti_join(ENE_2010_2017_full_vadjust, by = "comuna") |> 
-  select(comuna) |> 
-  pull()
-```
-# por codigo
-```{r}
-
-
-df_final |> 
-  anti_join(ENE_2010_2017_full_vadjust, by = "codigo") |> 
+codigos_faltantes <- df_final |> 
+  anti_join(ENE_2020_2017_full_vadjust1, by = "codigo") |> 
   select(codigo) |> 
+  distinct() |> 
   pull()
+
+
+df_final |>
+  filter(codigo %in% codigos_faltantes) |> 
+  distinct(codigo, .keep_all = TRUE)
+
+
+```
+
+# Base presidenciales
+```{r}
+df_presidenciales1 <- df_presidenciales_clean |> 
+    mutate(
+    comuna = comuna |> 
+      str_to_lower() |> 
+      stri_trans_general("Latin-ASCII") |> 
+      str_trim() |> 
+      str_squish()
+         )
+
+df_final |> 
+  anti_join(df_presidenciales1, by = "comuna") |> 
+  select(comuna) |> 
+  distinct()
+  pull()
+  
+  rm(df_presidenciales_clean, df_presidenciales1)
+  
 ```
