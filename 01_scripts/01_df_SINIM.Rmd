@@ -63,7 +63,7 @@ summary(df_1)
 ```
 - Se convierten los tipos de variables a numéricas y se reemplazan los valores no válidos (previamente "No Recepcionado") por `NA`. Se eliminan también aquellas filas sin código comunal. Con esto se asegura que los datos sean de tipo numérico y, por lo tanto, coherentes para el análisis estadístico.
 
-# 4. Reestructurar a formato largo
+# 4. Reestructuración a formato largo
 
 ```{r}
 df_2 <- df_1 %>%

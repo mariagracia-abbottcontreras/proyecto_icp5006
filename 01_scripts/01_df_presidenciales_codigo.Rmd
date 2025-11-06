@@ -1,0 +1,74 @@
+---
+title: "01_df_presidenciales_con_codigo"
+output: html_document
+date: "2025-11-06"
+---
+
+# 0. Cargar librerias
+
+```{r}
+rm(list = ls())
+library(dplyr)
+library(readxl)
+```
+
+# 1. Importar bases
+```{r}
+df_SINIM <- read_excel("C:/Users/Marita Abbott/Documents/R/R Magister/Proyecto_local/proyecto_icp5006/02_outputs/base_control_SINIM.xlsx") 
+
+df_presidenciales <- read_excel("C:/Users/Marita Abbott/Documents/R/R Magister/Proyecto_local/proyecto_icp5006/02_outputs/df_presidenciales_clean.xlsx")
+```
+
+
+# 2. Agregar columna de código comunal a presidenciales
+```{r}
+df_presidencial1 <- df_presidenciales |>
+  left_join(
+    df_SINIM |> 
+      select(`comuna`, `codigo`) |>
+      distinct(`comuna`, .keep_all = TRUE),  # evita duplicados
+    by = "comuna"
+  )
+```
+
+# 3. Verificar que funcionó y todo coincide
+
+```{r}
+# Comunas en presidenciales que NO encontraron código
+df_presidencial1 |>
+  filter(is.na(`codigo`)) |>
+  select(`comuna`) |>
+  distinct()
+
+df_SINIM |> 
+  anti_join(df_presidenciales, by = "comuna") |> 
+  select(comuna) |> 
+  distinct()
+
+df_presidenciales |> 
+  anti_join(df_SINIM, by = "comuna") |> 
+  select(comuna) |> 
+  distinct()
+
+```
+
+
+# 4. Eliminar Antartica
+
+```{r}
+df_presidencial_clean <- df_presidencial1 |>
+  filter(`comuna` != "antartica")
+
+df_presidencial_clean |> 
+  filter(is.na(`codigo`)) |>
+  select(`comuna`) |>
+  distinct()
+
+```
+
+
+# 5. Exportar nueva base
+```{r}
+writexl::write_xlsx(df_presidencial_clean, here("02_outputs","df_presidencial_clean_final.xlsx"))
+```
+
