@@ -13,16 +13,20 @@ library(tidyverse) #agrupa paquetes y permite manipulación de datos
 library(stringr) #facilita operaciones con cadenas de texto, útil para nombres de comunas
 library(dplyr) #manipulación y transformación de datos
 library(tidyr) #organización y reestructuración de datos
-library(stringi)   #manejo avanzado de texto (quitar acentos)
+library(stringi) #manejo avanzado de texto (quitar acentos)
+library(here)  #permite construir rutas de archivos de forma reproducible y segura
 
 ```
 
 # 1. Leer archivo de Excel
+
 ```{r}
 df_0 <- read_excel("C:/Users/Marita Abbott/Documents/R/R Magister/Proyecto_local/proyecto_icp5006/00_data/datos_comunales_SINIM.xlsx", skip = 3, col_names = FALSE)
 ```
+- Se lee la base descargada previamente desde la página web de la Subsecretaría de Desarrollo Regional y Administrativo (SINIM). Para asegurar que se importa solo la tabla útil, sin los comentarios ni encabezados, se saltan las tres primeras filas, dejandola así sin nombres de columna.
 
 # 2. Asignar manualmente los nombres a las respectivas columnas
+
 ```{r}
 #Definimos los años en orden descendente (como en el archivo)
 años <- 2017:2010
@@ -39,12 +43,14 @@ colnames(df_0) <- c(
 #Revisamos los nombres de las columnas
 colnames(df_0)
 ```
+- Se crean nombres descriptivos y consistentes para todas las variables según su año (2017-2010). De esta manera cada columna tiene el nombre de la categoria y el año (ej: `densidad_pob_2017`). De esta manera, es más facil identificar los nombres de las variables según el año, facilitando la manipulación posterior.
 
 # 3. Limpiar los datos
+
 ```{r}
 df_1 <- df_0 %>%
   mutate(
-    codigo = as.numeric(codigo),  # Código como texto (por si es numérico pero mejor como ID)
+    codigo = as.numeric(codigo),
     across(starts_with("densidad_"), as.numeric),
     across(starts_with("poblacion_"), as.numeric),
     across(starts_with("porc_femenina_"), as.numeric),
@@ -55,9 +61,10 @@ df_1 <- df_0 %>%
 summary(df_1)
 
 ```
-
+- Se convierten los tipos de variables a numéricas y se reemplazan los valores no válidos (previamente "No Recepcionado") por `NA`. Se eliminan también aquellas filas sin código comunal. Con esto se asegura que los datos sean de tipo numérico y, por lo tanto, coherentes para el análisis estadístico.
 
 # 4. Reestructurar a formato largo
+
 ```{r}
 df_2 <- df_1 %>%
   pivot_longer(
@@ -68,8 +75,10 @@ df_2 <- df_1 %>%
   ) %>%
   mutate(año = as.integer(año))
 ```
+- Al haber una columna por comuna con todas las observaciones en ella de todos los años, se transforma la base de formato ancho a una de formato largo. Así, tenemos una base en la que cada fila corresponde a una comuna y un año en particular con las variables y observaciones correspondientes. Esto facilita el análisis temporal, lo cual es fundamental para el objetivo de este estudio.
 
 # 5. Ordenar el resultado
+
 ```{r}
 df_completa <- df_2 %>%
   arrange(comuna, año) %>%
@@ -77,9 +86,10 @@ df_completa <- df_2 %>%
 
 head(df_completa)
 ```
-
+- Se ordena por comuna y año, reordenando también las columnas para mejor legibilidad. De esta forma, la base queda organizada y estandarizada para el análisis.
 
 # 6. Limpiar las observaciones
+
 ```{r}
 df_final <- df_completa |> 
   mutate(
@@ -92,8 +102,35 @@ df_final <- df_completa |>
 
 head(df_final)
 ```
+- Se hace una limpieza general de los nombres de las comunas, dejandolas en minúsculas, eliminando acentos y quitando espacios o carácteres extraños.
 
-# 7. Importar base madre
+
+# 7. Normalizar con base presidenciales
+
+```{r}
+df_final |> 
+  anti_join(df_presidenciales_clean, by = "comuna") |> 
+  select(comuna) |> 
+  distinct()
+  
+df_final <- df_final |>
+  mutate(comuna = case_when(
+    comuna == "aysen" ~ "aisen",
+    comuna == "trehuaco" ~ "treguaco",
+    comuna == "llaillay" ~ "llay-llay",
+    comuna == "marchihue" ~ "marchigue",
+    comuna == "paiguano" ~ "paihuano",
+    comuna == "o´higgins" ~ "o'higgins",
+    TRUE ~ comuna
+  ))
+
+```
+- Se comparan los nombres de comunas con la base `df_presidenciales_clean` con el fin de detectar inconsistencias. 
+
+- Se corrigen manualmente los casos conocidos de forma que ambos nombres de comuna aparezcan igual en ambas bases. En consecuencia, los nombres comunales entre estas bases quedan alineadas, lo que permite unirlas correctamente más adelante.
+
+# 8. Normalizar con base ENE
+
 ```{r}
 ENE_2020_2017_full_vadjust1 <- ENE_2010_2017_full_vadjust |> 
   rename(comuna = com_caracter, codigo = r_p_c)
@@ -110,26 +147,13 @@ df_final |>
   filter(codigo %in% codigos_faltantes) |> 
   distinct(codigo, .keep_all = TRUE)
 
-
 ```
+- En esta parte, se buscó normalizar con respecto a la base de ENE. Sin embargo, llama la atención la falta de ciertas comunas en esta última. Es por ello que este problema se resolverá en el futuro. Sin embargo, se realizó un filtro y listado para tener claridad de qué observaciones son las que requieren mayor atención.
 
-# Base presidenciales
+
+# 9. Exportar base final
 ```{r}
-df_presidenciales1 <- df_presidenciales_clean |> 
-    mutate(
-    comuna = comuna |> 
-      str_to_lower() |> 
-      stri_trans_general("Latin-ASCII") |> 
-      str_trim() |> 
-      str_squish()
-         )
+writexl::write_xlsx(df_final, here("02_outputs","base_control_SINIM.xlsx"))
 
-df_final |> 
-  anti_join(df_presidenciales1, by = "comuna") |> 
-  select(comuna) |> 
-  distinct()
-  pull()
-  
-  rm(df_presidenciales_clean, df_presidenciales1)
-  
 ```
+- Se exporta la base final, quedando esta en la carpeta `"02_outputs"`.
