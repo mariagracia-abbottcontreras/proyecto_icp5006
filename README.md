@@ -176,7 +176,48 @@ Se estimarán modelos de regresión lineal múltiple (OLS) y modelos de panel co
 
 Los resultados se presentarán mediante tablas de coeficientes, intervalos de confianza y gráficos comparativos que ilustren la relación entre desempleo y comportamiento electoral. Esta etapa permitirá comunicar de manera clara y precisa los hallazgos del estudio, facilitando la interpretación de los efectos estimados y su relevancia para la pregunta de investigación.
 
-## 8. Referencias
+## 8. Plan de análisis
+
+### 8.1. Propósito general del análisis
+
+El propósito central del análisis empírico es evaluar si las variaciones en la tasa de desempleo comunal influyen en la probabilidad de que los electores voten por candidatos presidenciales de oposición en Chile durante el período 2010–2017.
+
+Para ello, se utilizarán las bases de datos previamente procesadas —ENE (Encuesta Nacional de Empleo (INE)), SINIM (Sistema Nacional de Información Municipal) y Resultados Electorales Presidenciales (SERVEL)—, que permiten construir un panel comunal balanceado y realizar un análisis estadístico multivariado y comparativo.
+
+### 8.2. Construcción de la base de análisis
+
+El primer paso consiste en integrar las tres fuentes depuradas generadas en los scripts:
+
+- `01_df_ENE.Rmd`: contiene la tasa de desempleo comunal (ponderada por el factor fact), elaborada a partir de la ENE, para el período 2010–2017.
+
+- `01_df_presidenciales.Rmd`: registra los porcentajes y proporciones de votos comunales obtenidos por los candidatos ganadores en las elecciones presidenciales de 2013 (Michelle Bachelet) y 2017 (Sebastián Piñera).
+
+- `01_df_SINIM.Rmd`: incluye variables demográficas y estructurales comunales (población total, densidad poblacional, porcentaje rural, porcentaje femenina) para los años 2010–2017.
+
+Estas bases se unirán mediante el identificador comunal y el año, obteniendo un panel comunal-año con la siguiente estructura:
+
+| código | comuna | año | tasa_desempleo | voto_opositor | poblacion_tot | porc_rural | porc_femenina | densidad_pob |
+
+Esta base consolidada será el insumo principal para las regresiones y los análisis descriptivos posteriores.
+
+### 8.3. Definición de variables
+Variable dependiente (Y): voto opositor
+
+Corresponde a la proporción de votos comunales obtenidos por el candidato presidencial de oposición en cada elección.
+
+Para el cálculo:
+
+En 2013 (gobierno saliente: Piñera, centroderecha), el voto opositor se asocia a Michelle Bachelet (centroizquierda).
+
+En 2017 (gobierno saliente: Bachelet, centroizquierda), el voto opositor corresponde a Sebastián Piñera (centroderecha).
+
+Se construirá como:
+
+> OppoVoteᵢ,ₜ = β₀ + β₁·ΔDesempleoᵢ,ₜ + β₂·Zᵢ,ₜ + εᵢ,ₜ
+
+![Texto alternativo descriptivo](03_anexos/Formula_1.png)
+
+## 9. Referencias
 
 Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. 
 
