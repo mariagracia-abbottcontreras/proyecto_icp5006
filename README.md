@@ -201,21 +201,137 @@ Estas bases se unirán mediante el identificador comunal y el año, obteniendo u
 Esta base consolidada será el insumo principal para las regresiones y los análisis descriptivos posteriores.
 
 ### 8.3. Definición de variables
-Variable dependiente (Y): voto opositor
+
+**Variable dependiente (Y): voto opositor**
 
 Corresponde a la proporción de votos comunales obtenidos por el candidato presidencial de oposición en cada elección.
 
 Para el cálculo:
 
-En 2013 (gobierno saliente: Piñera, centroderecha), el voto opositor se asocia a Michelle Bachelet (centroizquierda).
-
-En 2017 (gobierno saliente: Bachelet, centroizquierda), el voto opositor corresponde a Sebastián Piñera (centroderecha).
+- En **2013** (gobierno saliente: Piñera, centroderecha), el voto opositor se asocia a Michelle Bachelet (centroizquierda).
+- En **2017** (gobierno saliente: Bachelet, centroizquierda), el voto opositor corresponde a Sebastián Piñera (centroderecha).
 
 Se construirá como:
 
-> OppoVoteᵢ,ₜ = β₀ + β₁·ΔDesempleoᵢ,ₜ + β₂·Zᵢ,ₜ + εᵢ,ₜ
+<p align="center"> <img src="03_anexos/Formula_1.png" alt="Fórmula de regresión empleada en el análisis" width="500"> </p>
 
-![Texto alternativo descriptivo](03_anexos/Formula_1.png)
+donde 𝑖 representa la comuna y 𝑡 el año de la elección.
+
+**Variable independiente principal (X): tasa de desempleo comunal**
+
+Proviene de la base ENE ajustada con ponderadores (`fact`), e indica el porcentaje de personas desocupadas dentro de la fuerza laboral de cada comuna en un año dado:
+
+<p align="center"> <img src="03_anexos/Formula_2.png" alt="Fórmula de regresión empleada en el análisis" width="500"> </p>
+
+Esta variable captura la situación económica local y constituye el principal predictor del comportamiento electoral opositor.
+
+**Variables de control (Z): características comunales**
+
+Derivadas de SINIM, se incluyen como covariables para controlar diferencias estructurales y demográficas que podrían influir tanto en el desempleo como en el voto:
+
+- `porc_femenina`: porcentaje de población femenina.
+- `porc_rural`: porcentaje de población rural.
+- `poblacion_tot`: tamaño de la población comunal.
+- `densidad_pob`: densidad poblacional (hab/km²).
+
+### 8.4. Análisis descriptivo inicial
+
+Antes de aplicar modelos de regresión, se realizará un análisis descriptivo y exploratorio, que incluirá:
+
+- Estadísticas básicas (media, mediana, rango, desviación estándar) de todas las variables.
+- Visualización gráfica con `ggplot2`:
+  - Dispersión entre `tasa_desempleo` y `voto_opositor`.
+  - Mapas o diagramas de correlación comunal.
+- Verificación de valores faltantes y atípicos.
+- Cálculo de correlaciones bivariadas.
+
+Este paso busca caracterizar el comportamiento territorial del desempleo y del voto opositor, además de verificar la consistencia del panel.
+
+### 8.5. Modelos econométricos
+
+El núcleo del plan de análisis consiste en la estimación de modelos de regresión lineal múltiple, diseñados para evaluar el efecto del desempleo comunal sobre el voto opositor, controlando por otras características comunales.
+
+**Modelo 1: Regresión lineal simple (OLS bivariada)**
+
+> **VotoOpositorit ​= β0 ​+ β1​Desempleoit ​+ εit​**
+
+Permite medir la relación directa entre el desempleo y el voto opositor, sin ajustar por otras variables. Se espera que β1 >0, es decir, que **mayores tasas de desempleo se asocien a un mayor voto por candidatos opositores.**
+
+**Modelo 2: Regresión múltiple con controles**
+
+> **VotoOpositorit ​= β0​ + β1​Desempleoit ​+ β2​PorcFemeninait​ + β3​PorcRuralit ​+ β4​DensidadPobit ​+ β5​PoblacionT + ... + εit**
+
+Este modelo ajusta por diferencias estructurales entre comunas, permitiendo aislar el efecto neto del desempleo sobre el voto opositor.
+
+**Modelo 3: Regresión con efectos fijos comunales y/o regionales**
+
+Dado que el análisis se basa en un panel (múltiples comunas a lo largo del tiempo), se aplicará un modelo de efectos fijos, que controla por características no observadas constantes en el tiempo (como historia política, cultura local o estructura productiva):
+
+> **VotoOpositorit ​= β0​ + β1​Desempleoit ​+ β2​Xit ​+ αi​ + γt ​+ εit**
+
+Donde: 
+
+- αi = efecto fijo comunal (características invariantes de cada comuna).
+- γt = efecto temporal (shocks nacionales o coyunturas electorales).
+- Xit​ = vector de variables de control.
+
+**Modelo 4: Diferencias en diferencias simplificado**
+
+Para contrastar el cambio entre las elecciones de 2013 y 2017, se puede aplicar un modelo de diferencias en diferencias (DiD), considerando la variación temporal por comuna:
+
+> **ΔVotoOpositori​ = β0 ​+ β1​ΔDesempleoi​ + β2​ΔXi ​+ εi​**
+
+Donde:
+
+- Δ indica el cambio entre 2013 y 2017.
+- Este enfoque identifica si el cambio en el desempleo comunal se asocia con el cambio en el voto opositor, proporcionando una interpretación más causal.
+
+### 8.6. Pruebas de robustez y diagnóstico
+
+Se realizarán las siguientes pruebas de validación estadística:
+
+- Multicolinealidad: mediante el Variance Inflation Factor (VIF) (`car::vif()`).
+- Heterocedasticidad: prueba de Breusch–Pagan (`lmtest::bptest()`).
+- Normalidad de residuos: Shapiro–Wilk o visualización Q–Q plot.
+- Autocorrelación temporal: prueba de Wooldridge para paneles (`plm::pwartest()`).
+- Robustez de errores estándar: estimadores robustos tipo HC1 (`vcovHC`).
+
+En caso de detectarse problemas, se ajustarán los modelos usando errores estándar robustos a heterocedasticidad y clustering comunal.
+
+### 8.7. Presentación e interpretación de resultados
+
+Los resultados se presentarán mediante:
+
+- Tablas con coeficientes estimados, errores estándar y niveles de significancia.
+- Gráficos de coeficientes (broom::tidy() + ggplot2).
+- Mapas de correlación comunal (voto opositor vs desempleo).
+- Comparación visual de medias y tendencias (2013–2017).
+
+Se analizará:
+
+- La magnitud y dirección del coeficiente β₁.
+- Las diferencias regionales o por tipo de comuna (urbana/rural).
+- La robustez del efecto al incluir controles o efectos fijos.
+
+Esto queda sujeto a posibles cambios futuros. 
+
+### 8.8. Síntesis e interpretación sustantiva
+
+Finalmente, el análisis permitirá responder la hipótesis central del proyecto:
+
+> *“A mayor nivel de desempleo comunal, mayor probabilidad de voto opositor en elecciones presidenciales.”*
+
+Se discutirán las implicancias políticas y sociales de este hallazgo, considerando:
+
+- La sensibilidad del voto a condiciones económicas locales.
+- Posibles diferencias territoriales en el comportamiento electoral.
+- La utilidad del desempleo comunal como indicador estructural para predecir tendencias políticas en Chile.
+
+### 8.9. Software y replicabilidad
+
+Todo el análisis se realizará en RStudio, con los paquetes: `tidyverse`, `plm`, `broom`, `lmtest`, `car`, y `ggplot2`.
+
+El código completo y las bases de salida permiten la replicación total del proceso descrito en este plan.
 
 ## 9. Referencias
 
