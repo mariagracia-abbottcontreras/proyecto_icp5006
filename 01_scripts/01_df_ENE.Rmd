@@ -21,7 +21,7 @@ library(zoo)  #funciones para series temporales (`na.locf` para arrastrar últim
 ```
 
 
-# 1, Importación de bases ENE
+# 1. Importación de bases ENE
 
 ```{r}
 files <- list.files(pattern = "\\.dta$", ignore.case = TRUE)
