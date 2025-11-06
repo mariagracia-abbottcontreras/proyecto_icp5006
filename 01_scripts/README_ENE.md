@@ -365,35 +365,6 @@ writexl::write_xlsx(ENE_2010_2017_full, "ENE_2010_2017_full_vadjust.xlsx")
 writexl::write_xlsx(ENE_2010_2017_compact, "ENE_2010_2017_compact_vadjust.xlsx")
 ```
 
-## Notas metodológicas
-
-1. **Justificación temporal:**
-
-   El estudio se centra en los años **2003, 2009, 2013 y 2017**, correspondientes a los períodos previos a elecciones presidenciales en Chile.  
-   La selección de estos años permite analizar cómo las condiciones del mercado laboral —particularmente el **desempleo comunal**— evolucionan antes de los procesos electorales y pueden incidir en el comportamiento del voto.  
-
-   El foco comparativo se sitúa en las **elecciones presidenciales de 2013 (Bachelet)** y **2017 (Piñera)**, en las que se observa un proceso de **alternancia política** entre gobiernos de signo contrario.  
-   Este contexto resulta especialmente relevante para evaluar si los cambios en el desempleo previo a cada elección se asocian con un **voto de castigo o de apoyo** hacia el gobierno en ejercicio.  
-
-   Asimismo, la inclusión de **2003 y 2009** amplía la base histórica del panel y permite estimar tendencias estructurales de largo plazo en el mercado laboral, fortaleciendo la **robustez y validez temporal del análisis longitudinal**.
-
-2. **Justificación territorial:**
-
-   El nivel de agregación **comunal** se considera el más adecuado para este estudio, ya que permite vincular de manera consistente tres fuentes de información:  
-   - Los indicadores socioeconómicos provenientes de la **Encuesta CASEN**,  
-   - Los resultados electorales del **Servicio Electoral de Chile (Servel)**, y  
-   - Los datos institucionales del **Sistema Nacional de Información Municipal (SINIM)**.  
-
-   Este enfoque territorial posibilita captar la **heterogeneidad local** del desempleo y sus posibles efectos diferenciados sobre el comportamiento electoral, reconociendo que las dinámicas laborales y políticas no se distribuyen de manera uniforme en el territorio chileno.
-
-3. **Reproducibilidad:**
-
-
-   Todo el proceso de construcción del panel comunal, limpieza de bases y cálculo de indicadores se encuentra **automatizado y documentado** mediante scripts reproducibles en R.  
-   Esto permite que otros investigadores puedan **replicar, auditar o actualizar** el análisis cuando nuevas versiones de CASEN o bases electorales sean publicadas.  
-
-   El objetivo es garantizar la **transparencia metodológica** y promover la reutilización de los datos para futuras investigaciones sobre comportamiento electoral y condiciones socioeconómicas locales en Chile.
-
 ## Contacto y créditos
 
 **Equipo de investigación:**
