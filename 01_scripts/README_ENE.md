@@ -18,7 +18,7 @@ Se elaboran **dos versiones**:
    - Utiliza los **ponderadores muestrales (`fact`)** de la ENE, lo que permite estimaciones **representativas de la población total**.  
    - Esta versión refleja con precisión la situación laboral real de cada comuna.
 
-Ambas versiones permiten calcular **diferencias interanuales** y **promedios por periodo presidencial (2010–2013 y 2014–2017)**, facilitando el análisis de tendencias del desempleo en Chile.
+Ambas versiones permiten calcular **diferencias interanuales** y **promedios por período  de análisis (2010–2013 y 2014–2017)**,  lo que facilita el análisis de las tendencias del desempleo en Chile antes de una elección presidencial; en este caso, las elecciones presidenciales de 2013 y 2017.
 
 ## 0. Configuración inicial
 
@@ -74,7 +74,7 @@ En esta sección se construye un **panel comunal no ponderado** a partir de los 
 
 Trabajar con una versión “raw” o sin ponderar cumple una función exploratoria y metodológica importante. Por un lado, permite verificar la **consistencia interna** de las bases antes de aplicar ajustes estadísticos más complejos. Esto incluye la revisión de nombres de variables, codificación de comunas, tratamiento de valores perdidos y detección de posibles errores en la integración anual. Por otro lado, posibilita observar **patrones relativos** entre comunas, ya que aunque las tasas obtenidas no sean representativas a nivel nacional, sí reflejan las diferencias sistemáticas en el número de personas ocupadas y desocupadas en cada territorio bajo los mismos criterios de cálculo.
 
-La generación de esta versión inicial también es clave para construir la **estructura del panel comunal**, que servirá como base para las siguientes etapas del procesamiento. Una vez definidas las tasas de desempleo comunales no ponderadas por año, se pueden calcular variaciones interanuales y promedios por periodo presidencial, lo que facilita identificar tendencias locales y preparar la información para su posterior comparación con la versión ajustada (ponderada). 
+La generación de esta versión inicial también es clave para construir la **estructura del panel comunal**, que servirá como base para las siguientes etapas del procesamiento. Una vez definidas las tasas de desempleo comunales no ponderadas por año, se pueden calcular variaciones interanuales y promedios para cada período analizado previo a la elección de análisis, lo que facilita identificar tendencias locales y preparar la información para su posterior comparación con la versión ajustada (ponderada).
 
 De esta manera, esta sección busca garantizar la trazabilidad y coherencia del proceso de análisis. La versión no ponderada funciona como un **punto de partida limpio y estandarizado**, que permite entender la distribución bruta del desempleo y establecer un marco de referencia antes de aplicar los ponderadores que corrigen las diferencias de tamaño y composición poblacional entre comunas.
 
@@ -137,7 +137,7 @@ ENE_2010_2017_full <- ENE_2010_2017_full %>%
   ungroup()
 ```
 
-En segundo lugar, se calculan los **promedios de variación por periodo presidencial**, agrupando los años de observación en dos bloques: 2010–2013 y 2014–2017. Esta agrupación obedece a la lógica política del estudio, en tanto permite evaluar posibles diferencias en la evolución del desempleo comunal bajo distintos contextos gubernamentales. El promedio de variación se obtiene tomando la media aritmética simple de las diferencias interanuales dentro de cada bloque de años, lo que entrega un indicador sintético del comportamiento del desempleo durante cada administración presidencial.
+En segundo lugar, se calculan los **promedios de variación por período de análisis**, agrupando los años de observación en dos bloques: 2010–2013 y 2014–2017. Esta división responde a la lógica electoral y política del estudio, ya que permite vincular las fluctuaciones del desempleo comunal con los contextos previos a las elecciones presidenciales de 2013 y 2017. De este modo, el promedio de variación se obtiene como la media aritmética simple de las diferencias interanuales dentro de cada bloque de años, generando un indicador sintético de la evolución del desempleo comunal en los periodos previos a cada elección presidencial. Este indicador será posteriormente contrastado con los resultados electorales, con el fin de examinar si los cambios en las condiciones laborales locales se asocian con un voto de apoyo o castigo hacia el gobierno en ejercicio.
 
 ```{r}
 # Definición periodos políticos
@@ -176,23 +176,27 @@ ENE_2010_2017_compact <- ENE_2010_2017_full %>%
   arrange(com_caracter, period)
 ```
 
-El propósito de esta etapa es doble. Por un lado, facilita la lectura comparada de la trayectoria del desempleo en el tiempo, más allá de las fluctuaciones puntuales que pueden darse entre años consecutivos. Por otro, permite identificar patrones estructurales y tendencias generales en el mercado laboral local, proporcionando evidencia empírica para vincular los cambios en el desempleo con factores políticos, económicos o territoriales. En suma, estas métricas transforman el panel comunal en una herramienta analítica capaz de mostrar no solo niveles estáticos de desempleo, sino también su ritmo, dirección y coherencia temporal en distintos contextos presidenciales.
+El propósito de esta etapa es doble. Por un lado, facilita una lectura comparada de la trayectoria del desempleo comunal en el tiempo, más allá de las fluctuaciones puntuales que pueden observarse entre años consecutivos. Por otro, permite identificar patrones estructurales y tendencias generales del mercado laboral local, proporcionando evidencia empírica para vincular las variaciones del desempleo con comportamientos políticos y electorales a nivel territorial. En suma, estas métricas transforman el panel comunal en una herramienta analítica que no solo refleja niveles estáticos de desempleo, sino también su ritmo, dirección y coherencia temporal en los contextos presidenciales previos a las elecciones de 2013 y 2017.
 
 ## 3. Versión “Adjusted” — Con ponderadores
 
 ### 3.1 ¿Qué son los ponderadores (fact)?
 
-En encuestas como la ENE, cada persona representa a un número distinto de individuos de la población.
+En encuestas como la **Encuesta Nacional de Empleo (ENE)**, los datos provienen de una muestra de la población, es decir, no se entrevista a todas las personas del país, sino a un grupo seleccionado que debe representar adecuadamente a la población total. Sin embargo, debido a factores como la distribución geográfica, el tamaño comunal o la no respuesta de algunos hogares, no todas las observaciones tienen la misma probabilidad de ser seleccionadas.
 
-El ponderador (`fact`) indica cuántas personas “reales” representa cada observación.
+Para corregir esas diferencias y garantizar que los resultados sean representativos del total de la población, se utilizan ponderadores o factores de expansión, identificados en la base de datos como `fact`.
+
+El ponderador indica cuántas personas “reales” de la población representa cada individuo encuestado.
 
 > **Ejemplo**: Si una persona tiene fact = 400, significa que representa a 400 personas en la población total.
 
+En otras palabras, los ponderadores permiten “expandir” la muestra hasta aproximarla al tamaño y estructura de la población total del país.
+
 Aplicar ponderadores es esencial porque:
 
-- Corrige desequilibrios muestrales (algunas comunas están sobre o subrepresentadas).
-- Asegura estimaciones representativas de la población.
-- Hace que los resultados sean comparables con los datos oficiales del INE.
+- **Corrige desequilibrios muestrales**: algunas comunas o grupos poblacionales pueden estar sobre o subrepresentados en la muestra.
+- **Asegura la representatividad**: los resultados obtenidos reflejan la realidad de toda la población y no solo la de las personas encuestadas.
+- **Permite comparabilidad**: las estimaciones se alinean con los estándares oficiales del Instituto Nacional de Estadísticas (INE).
 
 Sin ponderadores, las tasas reflejan solo la muestra; con ponderadores, reflejan la población real.
 
@@ -262,7 +266,7 @@ Adicionalmente, se incluye el conteo no ponderado de observaciones (`n_obs`), ú
 
 Finalmente, los resultados se **almacenan dinámicamente**: cada tabla de resumen trimestral se guarda en el entorno global con un nombre único (`summaryTrim_ENE2010`, `summaryTrim_ENE2011`, etc.), y su referencia se agrega a una lista (`summary_trim_names`) que facilitará su combinación posterior.
 
-Por lo tanto, este loop cumple una **doble función**: automatiza el procesamiento homogéneo de múltiples bases anuales y produce un conjunto estandarizado de **tasas comunales ponderadas**, comparables entre años y coherentes con la estructura probabilística de la ENE. Gracias a este procedimiento, se obtiene una **base sólida para construir el panel longitudinal**, garantizando **representatividad estadística y consistencia metodológica** en el análisis de la evolución del desempleo en Chile.
+Por lo tanto, este loop cumple una **doble función**: automatiza el procesamiento homogéneo de múltiples bases anuales y genera un conjunto estandarizado de **tasas comunales ponderadas**, comparables entre años y coherentes con la estructura probabilística de la ENE. Este procedimiento permite construir una **base sólida para el panel longitudinal**, asegurando **representatividad estadística y consistencia metodológica** en el análisis de la evolución del desempleo comunal. De este modo, se sientan las bases empíricas para examinar la relación entre las condiciones laborales locales y el comportamiento electoral en las elecciones presidenciales de 2013 y 2017.
 
 Cada resumen trimestral contiene:
 
@@ -293,7 +297,7 @@ Esto forma una base panel año × comuna × trimestre, ideal para análisis de t
 
 ### 3.4 Diferencias interanuales y promedios por periodo (ponderado)
 
-En esta etapa se trabaja sobre el panel comunal **ponderado**, es decir, aquel en el que las tasas de desempleo ya fueron ajustadas por los **factores de expansión** (`fact`) de la ENE. Estos factores permiten extrapolar los resultados de la muestra a la población total, corrigiendo el sesgo inherente al diseño muestral y otorgando representatividad estadística a las estimaciones. A partir de esta base, se busca comprender la **evolución temporal del desempleo** en las comunas entre 2010 y 2017, no sólo en términos absolutos, sino también **en función de sus variaciones interanuales y de los promedios por periodos presidenciales**.
+En esta etapa se trabaja sobre el panel comunal **ponderado**, es decir, aquel en el que las tasas de desempleo han sido ajustadas mediante los **factores de expansión** (`fact`) de la ENE. Estos factores permiten extrapolar los resultados muestrales a la población total, corrigiendo los sesgos derivados del diseño de la encuesta y otorgando representatividad estadística a las estimaciones. A partir de esta base, se analiza la **evolución temporal del desempleo comunal** entre 2010 y 2017, considerando no solo sus niveles absolutos, sino también sus variaciones interanuales y promedios por períodos presidenciales. Este enfoque permite observar las tendencias estructurales del mercado laboral local y preparar la información para su posterior contraste con los resultados electorales, en línea con el objetivo de examinar cómo las condiciones laborales previas a las elecciones de 2013 y 2017 se asocian con el voto opositor.
 
 El primer paso consiste en calcular, para cada comuna, la diferencia interanual ponderada del desempleo. Esto se logra agrupando los datos por comuna, ordenando los años de observación y aplicando la función lag() junto a na.locf() (del paquete zoo) para obtener el valor previo más reciente disponible. De este modo, se define una nueva variable, laggdiff, que representa el cambio en la tasa de desocupación entre un año y el anterior. Este indicador resulta útil para detectar tendencias locales —por ejemplo, comunas donde el desempleo ha aumentado o disminuido sistemáticamente—, y permite analizar el comportamiento del mercado laboral más allá de las variaciones puntuales de un año determinado.
 
@@ -311,7 +315,7 @@ ENE_2010_2017_full <- ENE_2010_2017_full %>%
   ungroup()
 ```
 
-Posteriormente, se introducen los periodos presidenciales como categorías analíticas que agrupan los años 2010–2013 y 2014–2017. Esta clasificación facilita la interpretación política y estructural de los cambios observados, permitiendo comparar la evolución del desempleo bajo distintos contextos institucionales y económicos. Para cada comuna y periodo se calcula el promedio de las diferencias interanuales (mean_laggdiff_period), junto con el número de años efectivamente observados con valores válidos (n_years_laggdiff_period).
+Posteriormente, se introducen los periodos de análisis como categorías analíticas que agrupan los años 2010–2013 y 2014–2017. Esta clasificación facilita la interpretación política y estructural de los cambios observados, permitiendo comparar la evolución del desempleo bajo distintos contextos institucionales y económicos. Para cada comuna y periodo se calcula el promedio de las diferencias interanuales (mean_laggdiff_period), junto con el número de años efectivamente observados con valores válidos (n_years_laggdiff_period).
 
 ```{r}
 # Definición de periodos políticos
@@ -336,7 +340,7 @@ ENE_2010_2017_full <- ENE_2010_2017_full %>%
   ungroup()
 ```
 
-El resultado final es un panel robusto que combina representatividad poblacional (por los ponderadores) con consistencia temporal (por las diferencias interanuales). Esto ofrece una visión más precisa y comparativa del desempleo comunal, tanto a nivel de corto plazo (año a año) como en horizontes políticos más amplios (periodos presidenciales). La información resultante permite detectar patrones estructurales de desempleo, evaluar la estabilidad del mercado laboral y sentar las bases para análisis posteriores vinculados a dinámicas económicas, territoriales o electorales.
+El resultado final es un panel robusto que combina representatividad poblacional (por los ponderadores) con consistencia temporal (por las diferencias interanuales). Esto ofrece una visión más precisa y comparativa del desempleo comunal, tanto a nivel de corto plazo (año a año) como en horizontes políticos más amplios (previos a una elección). La información resultante permite detectar patrones estructurales de desempleo, evaluar la estabilidad del mercado laboral y sentar las bases para análisis posteriores vinculados a dinámicas económicas, territoriales o electorales.
 
 ```{r}
 # Creación de una versión compacta
