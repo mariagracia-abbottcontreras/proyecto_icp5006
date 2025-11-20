@@ -263,7 +263,7 @@ Permite medir la relación directa entre el desempleo y el voto opositor, sin aj
 
 Este modelo ajusta por diferencias estructurales entre comunas, permitiendo aislar el efecto neto del desempleo sobre el voto opositor.
 
-**Modelo 3: Regresión con efectos fijos comunales y/o regionales**
+**Modelo 3: Regresión con efectos fijos regionales**
 
 Dado que el análisis se basa en un panel (múltiples comunas a lo largo del tiempo), se aplicará un modelo de efectos fijos, que controla por características no observadas constantes en el tiempo (como historia política, cultura local o estructura productiva):
 
@@ -275,16 +275,6 @@ Donde:
 - γt = efecto temporal (shocks nacionales o coyunturas electorales).
 - Xit​ = vector de variables de control.
 
-**Modelo 4: Diferencias en diferencias simplificado**
-
-Para contrastar el cambio entre las elecciones de 2013 y 2017, se puede aplicar un modelo de diferencias en diferencias (DiD), considerando la variación temporal por comuna:
-
-> **ΔVotoOpositori​ = β0 ​+ β1​ΔDesempleoi​ + β2​ΔXi ​+ εi​**
-
-Donde:
-
-- Δ indica el cambio entre 2013 y 2017.
-- Este enfoque identifica si el cambio en el desempleo comunal se asocia con el cambio en el voto opositor, proporcionando una interpretación más causal.
 
 ### 8.6. Pruebas de robustez y diagnóstico
 
