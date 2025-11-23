@@ -1,6 +1,5 @@
 # Efecto del desempleo comunal sobre el voto opositor en Chile: un análisis electoral 2010–2017
 
-- Entrega 1: Descripción de Proyecto 
 - Curso: ICP5006
 - Integrantes: María Gracía Abbott, Valentina Tesser y Daniel Trujillo
 
@@ -364,9 +363,71 @@ El código completo y las bases de salida permiten la replicación total del pro
 </details>
 
 <details>
-  <summary><strong>9. Referencias</strong></summary>
+  <summary><strong>9. Construcción de la base de análisis</strong></summary>
 
-## 9. Referencias
+## 9. Construcción de la base de análisis
+
+### 9.1 Propósito general del dataset integrado
+
+El análisis empírico busca evaluar si variaciones en la tasa de desempleo comunal afectan la preferencia electoral hacia candidatos presidenciales de oposición en Chile entre 2010 y 2017.
+
+Para responder esta pregunta es necesario construir un panel comunal balanceado, donde cada comuna tenga información laboral, demográfica y electoral en los años observados. Las tres bases procesadas proporcionan exactamente estos componentes:
+
+- ENE (INE): tasas de desocupación anual por comuna (2010–2017).
+- Presidenciales (SERVEL): resultados de votación presidencial por comuna (2013 y 2017).
+- SINIM: indicadores demográficos y estructurales comunales (2010–2017).
+
+La integración de estas fuentes permite modelar la relación entre estructura demográfica, condiciones laborales y comportamiento electoral a nivel territorial.
+
+### 9.5 Diccionario de Datos Final (`df_final`)
+
+**1. Variables de Identificación**
+
+| Variable   | Tipo     | Descripción                                                                      |
+| ---------- | -------- | -------------------------------------------------------------------------------- |
+| **codigo** | numérico | Código único de la comuna según el Sistema Nacional de Codificación Territorial. |
+| **comuna** | carácter | Nombre de la comuna normalizado (minúsculas, sin acentos).                       |
+| **region** | carácter | Región política-administrativa a la que pertenece la comuna.                     |
+| **año**    | numérico | Año de observación (coincide con año de elección o año ENE/SINIM según cruce).   |
+
+**2. Variables Electorales (SERVEL – Presidenciales)**
+
+| Variable             | Tipo     | Descripción                                                                  |
+| -------------------- | -------- | ---------------------------------------------------------------------------- |
+| **candidato_a**      | carácter | Nombre del candidato/a presidencial ganador/a en esa comuna.                 |
+| **votos_obtenidos**  | numérico | Número total de votos obtenidos por ese candidato en la comuna.              |
+| **total_de_votos**   | numérico | Total de votos emitidos en la comuna en ese año electoral.                   |
+| **porcentaje_votos** | numérico | Porcentaje de votos obtenidos por el candidato electo en la comuna.          |
+| **proporcion_votos** | numérico | Proporción de votos del candidato electo respecto del total comunal (0 a 1). |
+
+**3. Variables Laborales (INE – ENE)**
+
+| Variable                    | Tipo     | Descripción                                                    |
+| --------------------------- | -------- | -------------------------------------------------------------- |
+| **prop_desocup_anual**      | numérico | Proporción anual de desocupación estimada para la comuna.      |
+| **n_trimestres**            | numérico | Número de trimestres disponibles para el cálculo anual.        |
+| **prev_prop**               | numérico | Estimación previa usada en el proceso de smoothing del INE.    |
+| **laggdiff**                | numérico | Diferencia entre año actual y anterior (lagged difference).    |
+| **period**                  | numérico | Período calculado para el proceso de promediado móvil del INE. |
+| **mean_laggdiff_period**    | numérico | Media del laggdiff dentro del período correspondiente.         |
+| **n_years_laggdiff_period** | numérico | Número de años con datos válidos para ese período.             |
+
+**4. Variables Demográficas y Estructurales (SINIM)**
+
+| Variable          | Tipo     | Descripción                                         |
+| ----------------- | -------- | --------------------------------------------------- |
+| **densidad_pob**  | numérico | Densidad poblacional comunal por km².               |
+| **poblacion_tot** | numérico | Población total residente en la comuna.             |
+| **porc_femenina** | numérico | Porcentaje de población femenina.                   |
+| **porc_rural**    | numérico | Porcentaje de población residente en zonas rurales. |
+
+
+</details>
+
+<details>
+  <summary><strong>10. Referencias</strong></summary>
+  
+## 10. Referencias
 
 Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. 
 
