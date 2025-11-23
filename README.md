@@ -4,9 +4,17 @@
 - Curso: ICP5006
 - Integrantes: María Gracía Abbott, Valentina Tesser y Daniel Trujillo
 
+<details>
+  <summary><strong>1. Introducción</strong></summary>
+
 ## 1. Introducción
 La relación entre condiciones económicas locales y decisiones electorales constituye un tema central en la ciencia política, especialmente en el análisis del voto económico. En Chile, los periodos previos y posteriores a las elecciones presidenciales de 2013 y 2017 se caracterizaron por fluctuaciones en las tasas de desempleo comunal y por una alternancia entre coaliciones en el poder. Este proyecto se centra en examinar cómo las variaciones en la tasa de desempleo a nivel comunal influyen en la probabilidad de que los ciudadanos voten por candidatos de oposición, considerando tanto el efecto de castigo hacia el gobierno en funciones como la respuesta de apoyo ante contextos de bonanza económica. Mediante un análisis cuantitativo longitudinal, se busca identificar patrones consistentes que permitan comprender la interacción entre economía local y comportamiento electoral, contribuyendo a la discusión sobre los determinantes del voto en democracias consolidadas y emergentes.
 
+<details>
+
+<details>
+  <summary><strong>2. Objetivo</strong></summary>
+  
 ## 2. Objetivo
 Analizar cómo las variaciones en la tasa de desempleo comunal influyen en la probabilidad de que los electores voten por candidatos presidenciales de oposición en Chile entre 2010 y 2017, examinando si los cambios en las condiciones laborales previas a las elecciones de 2013 y 2017 se asocian con un voto de castigo o de apoyo hacia el gobierno en ejercicio, en un contexto de alternancia política y transformaciones estructurales del mercado laboral. 
 
@@ -14,10 +22,20 @@ Analizar cómo las variaciones en la tasa de desempleo comunal influyen en la pr
 - Examinar la evolución de la tasa de desempleo comunal en Chile entre 2010 y 2017.
 - Describir las variaciones territoriales en el apoyo electoral a los candidatos de gobierno y de oposición en las elecciones presidenciales de 2013 y 2017.
 - Estimar el efecto de la tasa de desempleo comunal sobre el voto opositor, controlando por variables sociodemográficas y territoriales.
-- Analizar si la relación entre desempleo y voto opositor varía según tipo de comuna, región o ciclo político. 
+- Analizar si la relación entre desempleo y voto opositor varía según tipo de comuna, región o ciclo político.
 
+<details>
+
+<details>
+  <summary><strong>3. Pregunta de investigación</strong></summary>
+  
 ## 3. Pregunta de investigación
 ¿En qué medida la tasa de desempleo comunal influye en la probabilidad de que los electores voten por candidatos presidenciales de oposición en Chile entre 2010 y 2017?
+
+<details>
+
+<details>
+  <summary><strong>4. Hipótesis</strong></summary>
 
 ## 4. Hipótesis
 A medida que aumenta la tasa de desocupación en una comuna, dicha comuna tenderá, en promedio, a votar en mayor proporción por la oposición. 
@@ -30,6 +48,11 @@ A medida que aumenta la tasa de desocupación en una comuna, dicha comuna tender
 ### 4.2 Justificación
 El período seleccionado (2010–2017) permite observar cómo fluctúan las tasas de desempleo en los años previos y posteriores a las elecciones presidenciales de 2013 y 2017. De esta forma, se podrá analizar si los cambios en las condiciones laborales comunales previas a cada elección se asocian con un voto de castigo o de apoyo hacia el gobierno en ejercicio. Este enfoque busca capturar el impacto de los ciclos económicos y políticos recientes, caracterizados por alternancia de coaliciones y transformaciones estructurales en el mercado laboral.
 
+<details>
+
+<details>
+  <summary><strong>5. Diagnóstico del problema</strong></summary>
+
 ## 5. Diagnóstico del problema
 La literatura sobre comportamiento electoral ha demostrado consistentemente la existencia de una relación entre desempeño económico y resultados electorales, fenómeno conocido como voto económico. En términos generales, los gobiernos tienden a ser castigados cuando la economía se deteriora y recompensados cuando esta mejora (Lewis-Beck y Stegmaier, 2019). Este patrón ha sido ampliamente documentado en democracias consolidadas, donde los votantes actúan como evaluadores retrospectivos del desempeño gubernamental. Sin embargo, en contextos latinoamericanos, y particularmente en Chile, dicha relación parece más ambigua y dependiente de factores institucionales, políticos y sociales. 
 
@@ -40,6 +63,11 @@ Pese a este avance, la mayoría de los estudios sobre voto económico en Chile s
 El período comprendido entre 2010 y 2017 ofrece una oportunidad analítica relevante para examinar este vínculo. Durante estos años, Chile experimentó alternancia política entre coaliciones, fluctuaciones en las tasas de desempleo y episodios de desaceleración económica. Observar cómo evolucionan las tasas de desocupación comunal antes y después de las elecciones presidenciales de 2013 y 2017 permite evaluar si el deterioro del mercado laboral se asocia con un voto de castigo hacia el gobierno o, por el contrario, con la mantención del apoyo oficialista. 
 
 En síntesis, el problema que motiva esta investigación radica en la escasa evidencia empírica sobre el impacto territorial del desempleo en el comportamiento electoral chileno. A diferencia de los enfoques centrados en percepciones nacionales o individuales, este estudio busca examinar cómo las condiciones económicas locales inciden en la probabilidad de votar por la oposición, contribuyendo a una comprensión más desagregada y contextual del voto económico en Chile contemporáneo. 
+
+<details>
+
+<details>
+  <summary><strong>6. Marco teórico</strong></summary>
 
 ## 6. Marco teórico
 El presente estudio se enmarca dentro de la literatura sobre voto económico, que analiza la relación entre el desempeño económico y los resultados electorales. Según ***Lewis-Beck y Stegmaier (2007, 2019)***, los gobiernos tienden a perder apoyo cuando la economía se deteriora y a ser recompensados en periodos de prosperidad. Este patrón, denominado voto económico retrospectivo, es persistente y se observa en múltiples democracias, aunque su intensidad varía según instituciones y sistemas electorales. Los autores distinguen tres enfoques principales: 
@@ -75,6 +103,11 @@ Los resultados del análisis muestran que mientras los trabajadores calificados 
 De esta manera, López muestra que el voto en Chile se ha vuelto más contingente y pragmático, donde las condiciones económicas, los liderazgos personales y las percepciones de desempeño gubernamental configuran una nueva forma de comportamiento electoral. Esta dinámica coincide con los hallazgos de la literatura reciente sobre voto económico, que subraya la interacción entre factores estructurales (como el desempleo o la desigualdad territorial) y factores políticos (como la aprobación presidencial o el liderazgo). 
 
 En síntesis, el marco teórico revisado permite situar la presente investigación dentro de una tradición que busca comprender cómo los contextos económicos influyen en el comportamiento electoral, sin perder de vista los condicionamientos políticos e institucionales. Mientras los estudios clásicos de voto económico (Lewis-Beck y Stegmaier, 2007, 2019; Cerda y Vergara, 2009) destacan la racionalidad económica del votante, investigaciones más recientes (Navia y Soto, 2015; Sáez-Lozano et al., 2014; López, 2004) advierten que dicha racionalidad está mediada por percepciones subjetivas, liderazgo y cambios sociales. En consecuencia, el análisis del efecto del desempleo comunal sobre el voto opositor en Chile entre 2010 y 2017 se inscribe en una línea de investigación que reconoce al votante como un actor racional, pero condicionado por su entorno territorial, sus experiencias económicas y el contexto político de cada elección. 
+
+<details>
+
+<details>
+  <summary><strong>7. Metodología</strong></summary>
 
 ## 7. Metodología
 La investigación adoptará un enfoque cuantitativo con un diseño longitudinal a nivel comunal, abarcando el período 2010–2017, que comprende las elecciones presidenciales de 2013 y 2017. Este rango temporal permite analizar cómo las variaciones en la tasa de desempleo comunal en los años previos y posteriores a cada elección se relacionan con el comportamiento electoral frente a los candidatos de oposición, considerando ciclos políticos y económicos recientes.
@@ -175,6 +208,11 @@ Se estimarán modelos de regresión lineal múltiple (OLS) y modelos de panel co
 **Paso 5: Presentación y visualización de resultados**
 
 Los resultados se presentarán mediante tablas de coeficientes, intervalos de confianza y gráficos comparativos que ilustren la relación entre desempleo y comportamiento electoral. Esta etapa permitirá comunicar de manera clara y precisa los hallazgos del estudio, facilitando la interpretación de los efectos estimados y su relevancia para la pregunta de investigación.
+
+<details>
+
+<details>
+  <summary><strong>8. Plan de análisis</strong></summary>
 
 ## 8. Plan de análisis
 
@@ -323,6 +361,11 @@ Todo el análisis se realizará en RStudio, con los paquetes: `tidyverse`, `plm`
 
 El código completo y las bases de salida permiten la replicación total del proceso descrito en este plan.
 
+<details>
+
+<details>
+  <summary><strong>9. Referencias</strong></summary>
+
 ## 9. Referencias
 
 Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. 
@@ -338,4 +381,6 @@ Navia, P., & Soto Castro, M. (2015). *Voto económico y comportamiento electoral
 Sáez-Lozano, J. L., Jaime-Castillo, A. M., & Letelier-Saavedra, M. (2014). *Economic voting under uncertainty: Evidence from the Chilean presidential elections.* Electoral Studies, 36, 1–14. 
 
 Stokes, D. E. (1963). Spatial models of party competition. *American Political Science Review*, 57(2), 368–377. 
+
+<details>
 
