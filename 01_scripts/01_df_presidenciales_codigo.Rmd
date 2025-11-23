@@ -1,7 +1,9 @@
 ---
-title: "01_df_presidenciales_con_codigo"
+title: "01_df_final"
 output: html_document
 date: "2025-11-06"
+editor_options: 
+  chunk_output_type: console
 ---
 
 # 0. Cargar librerias
@@ -9,19 +11,31 @@ date: "2025-11-06"
 ```{r}
 rm(list = ls())
 library(dplyr)
+library(here)
 library(readxl)
 ```
 
 # 1. Importar bases
-```{r}
-df_SINIM <- read_excel("C:/Users/Marita Abbott/Documents/R/R Magister/Proyecto_local/proyecto_icp5006/02_outputs/base_control_SINIM.xlsx") 
 
-df_presidenciales <- read_excel("C:/Users/Marita Abbott/Documents/R/R Magister/Proyecto_local/proyecto_icp5006/02_outputs/df_presidenciales_clean.xlsx")
+Importamos las tres bases principales: ENE, SINIM y presidenciales
+
+```{r}
+df_ENE <- read_excel(here("02_outputs", "ENE_2010_2017_full_vadjust.xlsx"))
+
+df_SINIM <- read_excel(here("02_outputs","base_control_SINIM.xlsx"))
+
+df_presidenciales <- read_excel(here("02_outputs","df_presidenciales_clean.xlsx"))
 ```
 
+# 2. Preparar base de Presidenciales: agregar códigos SINIM
 
-# 2. Agregar columna de código comunal a presidenciales
+Alineamos la base de presidenciales con los códigos comunales de SINIM.
+
+## 2.1 Agregar columna de código comunal a presidenciales
+
 ```{r}
+# Agregamos el código comunal desde SINIM a la base de presidenciales
+
 df_presidencial1 <- df_presidenciales |>
   left_join(
     df_SINIM |> 
@@ -31,19 +45,24 @@ df_presidencial1 <- df_presidenciales |>
   )
 ```
 
-# 3. Verificar que funcionó y todo coincide
+## 2.2 Verificar que funcionó y todo coincide
 
 ```{r}
-# Comunas en presidenciales que NO encontraron código
+# Revisamos comunas de presidenciales que no encontraron código en SINIM
+
 df_presidencial1 |>
   filter(is.na(`codigo`)) |>
   select(`comuna`) |>
   distinct()
 
+# Verificamos comunas en SINIM que no están en presidenciales
+
 df_SINIM |> 
   anti_join(df_presidenciales, by = "comuna") |> 
   select(comuna) |> 
   distinct()
+
+# Verificamos comunas en presidenciales que no están en SINIM
 
 df_presidenciales |> 
   anti_join(df_SINIM, by = "comuna") |> 
@@ -52,23 +71,224 @@ df_presidenciales |>
 
 ```
 
-
-# 4. Eliminar Antartica
+## 2.3 Eliminar Antartica
 
 ```{r}
+
+# Excluimos Antártica, ya que esta comuna no es comparable con el resto
+
 df_presidencial_clean <- df_presidencial1 |>
   filter(`comuna` != "antartica")
+
+# Confirmamos que no quedan comunas sin código luego de la limpieza
 
 df_presidencial_clean |> 
   filter(is.na(`codigo`)) |>
   select(`comuna`) |>
   distinct()
 
+df_presidencial_clean
+
 ```
 
 
-# 5. Exportar nueva base
+## 2.4 Exportar nueva base
+
 ```{r}
+# Exportamos la base final con códigos comunales incorporados
+
 writexl::write_xlsx(df_presidencial_clean, here("02_outputs","df_presidencial_clean_final.xlsx"))
+```
+
+
+# 3. Preparar base ENE: agregar códigos SINIM
+
+Repetimos el proceso para ENE antes de unir las bases.
+
+## 3.1 Revisar los nombres de variables y dejar todo estandarizado
+
+```{r}
+# 1. Revisar los nombres originales (ya lo hiciste)
+names(df_ENE)
+names(df_SINIM)
+
+# 2. Renombrar variables claves en ENE para que coincidan con SINIM
+
+df_ENE <- df_ENE |>
+  rename(
+    codigo = r_p_c,       
+    comuna = com_caracter 
+  )
+
+names(df_ENE)
+
+```
+
+
+## 3.2 Verificar coincidencia de códigos entre ENE y SINIM
+
+```{r}
+# 3. Códigos que están en ENE pero NO en SINIM
+df_ENE |> 
+  anti_join(df_SINIM, by = "codigo") |> 
+  distinct(codigo)
+
+# 4. Códigos que están en SINIM pero NO en ENE
+df_SINIM |> 
+  select(codigo) |> 
+  distinct() |>
+  anti_join(df_ENE |> select(codigo) |> distinct(), by = "codigo")
+
+# 4.1 Listamos esas comunas faltantes
+missing_from_ENE <- df_SINIM |> 
+  select(codigo, comuna) |> 
+  distinct() |>
+  anti_join(df_ENE |> select(codigo) |> distinct(), by = "codigo")
+
+missing_from_ENE
+```
+
+Las 42 comunas ausentes en la ENE se excluyen del análisis, dado que la encuesta no reporta estimaciones comunales para territorios con bajo tamaño muestral o falta de representatividad estadística. Esto asegura consistencia entre las bases y evita la introducción de valores faltantes estructurales.
+
+
+# 4. Unificar las bases: SINIM, Presidenciales y ENE
+
+Antes de realizar la unión final, es necesario asegurar que las tres bases compartan el mismo universo de comunas. Como se mostró en la sección anterior, la base ENE (Encuesta Nacional de Empleo del INE) no reporta datos comunales para 42 comunas, debido a restricciones de tamaño muestral. Esto ocurre porque ENE solo entrega estimaciones de desempleo comunal cuando existe suficiente representatividad estadística; comunas pequeñas, rurales o aisladas quedan fuera del operativo.
+
+Debido a esto, se decide eliminar estas 42 comunas tanto en SINIM como en la base de Presidenciales, de modo de trabajar únicamente con aquellas comunas para las cuales existe información completa en las tres fuentes. Esta decisión metodológica evita generar valores faltantes estructurales y garantiza la consistencia del dataset final.
+
+## 4.1 Eliminar las 42 comunas ausentes en ENE desde SINIM y Presidenciales
+
+```{r}
+# Eliminamos las comunas ausentes en ENE desde SINIM
+df_SINIM_clean <- df_SINIM |>
+  anti_join(missing_from_ENE, by = "codigo")
+
+# Eliminamos las comunas ausentes en ENE desde la base de presidenciales
+df_presidencial_clean2 <- df_presidencial_clean |>
+  anti_join(missing_from_ENE, by = "codigo")
+
+# Verificación: revisar que las tres bases tengan el mismo universo de comunas
+df_SINIM_clean |> distinct(codigo) |> count()
+df_presidencial_clean2 |> distinct(codigo) |> count()
+df_ENE |> distinct(codigo) |> count()
+
+```
+
+
+## 4.2 revisamos la variables de cada una de las bases 
+
+```{r}
+# Revisar variables en cada base
+
+names(df_ENE)
+names(df_SINIM_clean)
+names(df_presidencial_clean2)
+
+```
+
+## 4.3 Estandarizar variables clave antes de unir
+
+```{r}
+# Verificación final de claves
+df_ENE |> select(codigo, ano_encuesta) |> head()
+df_SINIM_clean |> select(codigo, año) |> head()
+df_presidencial_clean2 |> select(codigo, ano_de_eleccion) |> head()
+
+```
+
+## 4.4 Construir base comunal–año (SINIM + ENE)
+
+```{r}
+# renombrar temporalmente el año ENE para hacer el merge con SINIM
+df_ENE2 <- df_ENE |>
+  rename(año = ano_encuesta)
+
+df_panel <- df_SINIM_clean |>
+  left_join(df_ENE2, by = c("codigo", "año"))
+
+names(df_panel)
+
+# Revisar si quedaron NA en las variables ENE
+df_panel |> 
+  summarise(across(starts_with("prop_desocup_anual"), ~sum(is.na(.x))))
+
+```
+
+## 4.5 Integrar la base presidencial (como variables, no como año)
+
+Presidenciales no es una serie anual → no se une por año, sino por comuna y asignando valores cuando corresponda al año electoral.
+
+```{r}
+df_final <- df_panel |>
+  left_join(df_presidencial_clean2, 
+            by = c("codigo" = "codigo", "año" = "ano_de_eleccion"))
+
+```
+
+En los años 2013 y 2017 → aparecen los votos
+
+En los otros años → quedan NA (correcto, no hubo elección)
+
+## 4.6 Reordenar columnas 
+
+(Primero Presidenciales → luego ENE → luego SINIM)
+
+```{r}
+df_final <- df_final |>
+  select(
+    # ------------------------------------------------
+    # 1. Variables de Presidenciales
+    # ------------------------------------------------
+    codigo,
+    comuna,          # comuna de presidenciales
+    region,
+    año,
+    candidato_a,
+    votos_obtenidos,
+    total_de_votos,
+    porcentaje_votos,
+    proporcion_votos,
+
+    # ------------------------------------------------
+    # 2. Variables de ENE
+    # ------------------------------------------------
+    prop_desocup_anual,
+    n_trimestres,
+    prev_prop,
+    laggdiff,
+    period,
+    mean_laggdiff_period,
+    n_years_laggdiff_period,
+
+    # ------------------------------------------------
+    # 3. Variables SINIM
+    # ------------------------------------------------
+    densidad_pob,
+    poblacion_tot,
+    porc_femenina,
+    porc_rural
+  )
+
+```
+
+## 4.7 Verificación final del panel
+
+```{r}
+# ¿Alguna fila sin comuna o código?
+df_final |> filter(is.na(codigo) | is.na(comuna))
+
+# ¿Algún año sin datos importantes?
+df_final |> summarise(across(everything(), ~sum(is.na(.x))))
+
+```
+
+## 4.8 Exportar la base final
+
+Se exporta la base final que integra las tres fuentes de datos, lista para análisis posteriores.
+
+```{r}
+writexl::write_xlsx(df_final, here("02_outputs", "df_final_full.xlsx"))
+
 ```
 
