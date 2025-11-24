@@ -312,7 +312,6 @@ Donde:
 - γt = efecto temporal (shocks nacionales o coyunturas electorales).
 - Xit​ = vector de variables de control.
 
-
 ### 8.6. Pruebas de robustez y diagnóstico
 
 Se realizarán las siguientes pruebas de validación estadística:
@@ -365,21 +364,235 @@ El código completo y las bases de salida permiten la replicación total del pro
 <details>
   <summary><strong>9. Construcción de la base de análisis</strong></summary>
 
-## 9. Construcción de la base de análisis
+## 9. Construcción de la base de análisis (`df_final`)
 
-### 9.1 Propósito general del dataset integrado
+La construcción de la base de análisis final (`df_final`) implicó un proceso secuencial de limpieza, estandarización, armonización territorial y combinación de tres fuentes principales: la Encuesta Nacional de Empleo (ENE), los resultados electorales presidenciales (Servel) y la base sociodemográfica del Sistema Nacional de Información Municipal (SINIM). Cada una de estas fuentes posee estructuras, formatos y unidades de análisis distintas, por lo que fue necesario un proceso metodológico cuidadosamente diseñado para asegurar consistencia temporal y comunal a lo largo del periodo estudiado (2010–2017).
 
-El análisis empírico busca evaluar si variaciones en la tasa de desempleo comunal afectan la preferencia electoral hacia candidatos presidenciales de oposición en Chile entre 2010 y 2017.
+El objetivo final de esta integración es construir una base longitudinal que permita estimar cómo las fluctuaciones comunales en la tasa de desempleo influyen en el apoyo a candidatos presidenciales de oposición. Esto requiere capturar variación anual dentro de las comunas, diferenciar entre ciclos políticos (pre y post elecciones) y controlar características estructurales del territorio.
 
-Para responder esta pregunta es necesario construir un panel comunal balanceado, donde cada comuna tenga información laboral, demográfica y electoral en los años observados. Las tres bases procesadas proporcionan exactamente estos componentes:
+A continuación se detalla el proceso en cada script.
 
-- ENE (INE): tasas de desocupación anual por comuna (2010–2017).
-- Presidenciales (SERVEL): resultados de votación presidencial por comuna (2013 y 2017).
-- SINIM: indicadores demográficos y estructurales comunales (2010–2017).
+### 9.1. Preparación de la base presidencial
 
-La integración de estas fuentes permite modelar la relación entre estructura demográfica, condiciones laborales y comportamiento electoral a nivel territorial.
+Antes de construir la base final (df_final), se desarrolló un proceso exhaustivo de limpieza, estandarización y consolidación de la base presidencial, lo cual se encuentra documentado en detalle en el README específico dentro de la carpeta de procesamiento de los scripts correspondientes (insertar enlace). En dicho documento se explica paso a paso cómo se transformaron los datos originales del Servel, cómo se resolvieron diferencias en nombres comunales, cómo se armonizaron los resultados entre años y cómo se generaron las variables que posteriormente se utilizaron en el análisis longitudinal.
 
-### 9.5 Diccionario de Datos Final (`df_final`)
+En su versión final, la base presidencial contiene las siguientes variables principales, construidas a partir del procesamiento previo:
+
+- **`ano_de_eleccion`**: Año en que se realizó la elección presidencial.
+- **`region`**: Región administrativa correspondiente a la comuna.
+- **`comuna`**: Nombre de la comuna donde se registran los votos.
+- **`candidato_a`**: Candidato o candidata que recibe los votos.
+- **`votos_obtenidos`**: Número total de votos obtenidos por el candidato/a en la comuna.
+- **`total_de_votos`**: Total de votos emitidos en la comuna para la elección presidencial.
+- **`porcentaje_votos`**: Porcentaje de votos que obtuvo cada candidato/a respecto del total comunal.
+- **`proporcion_votos`**: Proporción equivalente del porcentaje de votos, expresada como valor entre 0 y 1.
+
+Estas variables permiten modelar cómo evoluciona el apoyo electoral en cada comuna y facilitan su posterior combinación con la serie anual de desempleo de la ENE y las características estructurales provenientes de SINIM.
+
+#### 9.1.1 Preparación para la unión con SINIM
+
+Para integrar correctamente la base presidencial en el panel comunal, fue necesario asignar a cada registro su código territorial oficial. El Servel no utiliza el mismo identificador que SINIM, por lo que esta etapa consiste en alinear nombres de comunas, agregar los códigos comunales y depurar territorios no comparables.
+
+A continuación se detalla el procedimiento implementado en el script:
+
+**Agregar columna de código comunal a presidenciales**
+
+Se realiza un `left_join` entre la base presidencial y la base SINIM, utilizando el nombre de la comuna como llave. Para evitar errores de duplicación, se selecciona únicamente un registro por comuna desde SINIM.
+
+```{r}
+df_presidencial1 <- df_presidenciales |>
+  left_join(
+    df_SINIM |> 
+      select(comuna, codigo) |>
+      distinct(comuna, .keep_all = TRUE),
+    by = "comuna"
+  )
+```
+**Verificación de coincidencias**
+
+Se validó que todas las comunas de la base presidencial encontraran su correspondiente código en SINIM y, adicionalmente, que no existieran comunas en SINIM sin representación en los datos electorales. Esto garantiza consistencia territorial al momento de construir el panel.
+
+```{r}
+# Comunas sin código asignado (potenciales inconsistencias)
+df_presidencial1 |>
+  filter(is.na(codigo)) |>
+  select(comuna) |>
+  distinct()
+
+# Comunas que están en SINIM pero no en la base presidencial
+df_SINIM |> 
+  anti_join(df_presidenciales, by = "comuna") |> 
+  select(comuna) |> 
+  distinct()
+
+# Comunas que están en la base presidencial pero no en SINIM
+df_presidenciales |> 
+  anti_join(df_SINIM, by = "comuna") |> 
+  select(comuna) |> 
+  distinct()
+```
+
+**Eliminación de Antártica**
+
+La comuna de **Antártica** se excluye del análisis debido a su falta de comparabilidad estadística y demográfica con el resto del territorio continental, además de presentar inconsistencias en registros en distintas fuentes.
+
+```{r}
+df_presidencial_clean <- df_presidencial1 |>
+  filter(comuna != "antartica")
+
+# Confirmar que no quedan comunas sin código
+df_presidencial_clean |> 
+  filter(is.na(codigo)) |>
+  select(comuna) |>
+  distinct()
+```
+
+**Exportar nueva base**
+
+Finalmente, se exporta la versión limpia y armonizada de la base presidencial, ahora con códigos comunales incorporados para su posterior unión con SINIM y ENE.
+
+```{r}
+writexl::write_xlsx(df_presidencial_clean, here("02_outputs","df_presidencial_clean_final.xlsx"))
+```
+
+### 9.2 Preparación de la base ENE
+
+Previo a la construcción del data frame final (`df_final`), se desarrolló un proceso exhaustivo de limpieza, armonización y estandarización de la Encuesta Nacional de Empleo (ENE). Este procedimiento se encuentra documentado en detalle en el README correspondiente a la carpeta de procesamiento de ENE (insertar enlace), donde se describen las versiones generadas y sus diferencias metodológicas.
+
+En este proyecto se decidió utilizar la versión ajustada full de la ENE. Esta decisión se fundamenta en tres criterios principales:
+
+- Corrección de discontinuidades temporales derivadas de cambios metodológicos en los ponderadores del INE, que afectan la comparabilidad entre años.
+- Homogeneización de los tamaños comunales mediante la aplicación del factor de ajuste desarrollado en el procesamiento previo, con el fin de generar una serie consistente en el tiempo.
+- Mayor estabilidad estadística, especialmente para comunas con muestras pequeñas, reduciendo la volatilidad artificial en la tasa de desempleo.
+
+La versión ajustada full contiene las siguientes variables estructurales (ejemplo; reemplazar por lista completa si la tienes):
+
+- **`ano`**: año al que corresponde la estimación anual derivada de los trimestres móviles.
+- **`n_trimestres`**: número de trimestres móviles disponibles en el año para la comuna; indica completitud de la serie.
+- **`codigo`**: identificador comunal estandarizado utilizado para unir ENE con SINIM y Servel (renombrado desde `r_p_c`).
+- **`comuna`**: nombre de la comuna (renombrado desde `com_caracter`).
+- **`prop_desocup_anual`**: proporción anual ajustada de desocupación comunal; indicador principal del análisis.
+- **`prev_prop`**: valor promedio previo utilizado en el ajuste, con base en la tendencia de trimestres anteriores.
+- **`laggdiff`**: diferencia entre la proporción anual y el valor previo; captura variaciones relevantes entre años.
+- **`period`**: clasificación del año en ciclos políticos (pre, elección, post), necesaria para el análisis longitudinal.
+- **`mean_laggdiff_period`**: promedio de laggdiff dentro del ciclo político correspondiente.
+- **`n_years_laggdiff_period`**: número de años que componen cada ciclo político para esa comuna, utilizado como control de estabilidad.
+
+Estas variables permiten construir una medida anualizada de la desocupación comunal, que luego se integrará en el panel final junto con los datos electorales y sociodemográficos.
+
+#### 9.2.1 Preparación para la unión con SINIM
+
+Para poder integrar la ENE dentro de la base longitudinal, fue necesario estandarizar su estructura territorial y validar la correspondencia de códigos con SINIM. El proceso se desarrolló en tres etapas principales: estandarización de nombres, verificación de coincidencias y depuración de territorios sin información.
+
+**Estandarización de nombres y variables clave**
+
+El primer paso consistió en homologar las variables territoriales entre ENE y SINIM. La ENE trae los identificadores comunales bajo nombres distintos (`r_p_c` y `com_caracter`), por lo que se procedió a renombrarlos para asegurar consistencia con el resto del proyecto:
+
+```{r}
+# 1. Revisar los nombres originales
+names(df_ENE)
+names(df_SINIM)
+
+# 2. Renombrar variables clave
+df_ENE <- df_ENE |>
+  rename(
+    codigo = r_p_c,        # Código comunal
+    comuna = com_caracter  # Nombre de la comuna
+  )
+names(df_ENE)
+```
+Este paso es crítico, ya que la integración posterior se realiza mediante un `left_join` por el identificador comunal codigo.
+
+**Verificación de correspondencia territorial ENE–SINIM**
+
+Antes de unir las bases, se evaluó la coincidencia de códigos entre ambos data frames, con el fin de identificar: comunas presentes en ENE pero ausentes en SINIM, comunas presentes en SINIM pero sin estimaciones ENE, posibles inconsistencias en la codificación territorial.
+
+```{r}
+# 3. Códigos presentes en ENE pero no en SINIM
+df_ENE |> 
+  anti_join(df_SINIM, by = "codigo") |> 
+  distinct(codigo)
+
+# 4. Códigos presentes en SINIM pero no en ENE
+df_SINIM |> 
+  select(codigo) |> 
+  distinct() |>
+  anti_join(df_ENE |> select(codigo) |> distinct(), by = "codigo")
+
+# 4.1 Listar comunas faltantes en ENE
+missing_from_ENE <- df_SINIM |> 
+  select(codigo, comuna) |> 
+  distinct() |>
+  anti_join(df_ENE |> select(codigo) |> distinct(), by = "codigo")
+
+missing_from_ENE
+```
+
+#### 9.2.2 Depuración de comunas sin representación en la ENE
+
+El procedimiento anterior reveló un conjunto de **42 comunas que**, si bien están formalmente registradas en SINIM, **no cuentan con estimaciones en la ENE durante el periodo analizado (2010–2017)**. Esto se debe principalmente a: tamaños muestrales insuficientes en territorios de baja población, falta de representatividad estadística, ausencia de levantamiento muestral estable en años específicos.
+
+Dado que estas comunas no podrían presentar series temporales consistentes, fueron excluidas del análisis, asegurando así que:
+
+1. `df_final` no incorpore valores faltantes estructurales;
+2. la comparación temporal entre comunas sea homogénea;
+3. el modelo longitudinal no incorpore distorsiones producto de observaciones parcial o completamente ausentes.
+
+#### 9.2.3 Resultado de esta etapa.
+
+Luego de este proceso, la base ENE quedó completamente armonizada a nivel territorial y con una estructura compatible con el resto de las fuentes utilizadas. Sus códigos comunales fueron estandarizados para coincidir con los empleados tanto en SINIM como en la base electoral del Servel, lo que permitió asegurar una correspondencia territorial consistente. Asimismo, se definió el universo final de comunas que formarán parte del panel longitudinal, excluyendo aquellas sin representación estadística en la ENE. Con ello, la base quedó lista para ser integrada en el script de construcción del panel (`01_df_final.Rmd`), donde se realiza la unión anual con los datos electorales y sociodemográficos.
+
+### 9.3 Unificar las bases: SINIM, Presidenciales y ENE
+
+En esta etapa se integran las tres fuentes principales del panel comunal: `SINIM`, `Presidenciales` y `ENE`. Antes de realizar la unión, fue necesario garantizar que las tres bases compartieran el mismo universo territorial. Como se señaló previamente, ENE no reporta información comunal para 42 comunas debido a restricciones de tamaño muestral —el INE solo publica estimaciones cuando existe representatividad estadística suficiente, lo que excluye comunas pequeñas, rurales o aisladas.
+
+Para asegurar consistencia, estas 42 comunas fueron eliminadas también de SINIM y de la base Presidenciales, evitando valores faltantes estructurales y permitiendo trabajar con un panel completamente balanceado. Esto se realizó mediante un anti_join(), que filtra únicamente las comunas con presencia en ENE.
+
+```{r}
+# Eliminamos las comunas ausentes en ENE desde SINIM
+df_SINIM_clean <- df_SINIM |>
+  anti_join(missing_from_ENE, by = "codigo")
+
+# Verificación: revisar que las tres bases tengan el mismo universo de comunas
+df_SINIM_clean |> distinct(codigo) |> count()
+df_presidencial_clean2 |> distinct(codigo) |> count()
+df_ENE |> distinct(codigo) |> count()
+```
+
+Posteriormente, se revisaron las variables presentes en cada base y se verificó que las claves necesarias para la unión coincidieran: código, comuna y año (en sus distintas denominaciones). Antes de integrar, se estandarizó la variable temporal, renombrando ano_encuesta (ENE) a año para que coincidiera con la estructura de SINIM.
+
+Con estas condiciones cumplidas, se construyó la primera gran unión: `SINIM` + `ENE`, mediante *left_join()*. Esto permite incorporar las estimaciones de desempleo comunal directamente a la serie anual de `SINIM`, asegurando que cada comuna–año cuente con su respectivo valor de desempleo cuando corresponde. Tras la unión, se verificó que no existieran valores faltantes inesperados en las variables `ENE`.
+
+```{r}
+# renombrar temporalmente el año ENE para hacer el merge con SINIM
+df_ENE2 <- df_ENE |>
+  rename(año = ano_encuesta)
+
+df_panel <- df_SINIM_clean |>
+  left_join(df_ENE2, by = c("codigo", "año"))
+
+names(df_panel)
+
+# Revisar si quedaron NA en las variables ENE
+df_panel |> 
+  summarise(across(starts_with("prop_desocup_anual"), ~sum(is.na(.x))))
+```
+
+Luego, se integró la base Presidenciales. Dado que ésta no es una serie anual, su unión no se realiza por cada año, sino únicamente para los años electorales. Para ello, se utilizó un *left_join()* por código comunal y año electoral. De esta forma, en los años 2013 y 2017 aparecen correctamente los votos y porcentajes; en los demás años, las variables electorales permanecen ausentes (NA), lo que es correcto y esperado.
+
+```{r}
+df_final <- df_panel |>
+  left_join(df_presidencial_clean2, 
+            by = c("codigo" = "codigo", "año" = "ano_de_eleccion"))
+```
+
+Una vez integrada toda la información, se reorganizaron las columnas para mejorar la estructura del panel. Se estableció un orden lógico que sitúa primero las variables electorales (código, comuna, región, votos, proporciones), luego las variables de ENE (desempleo anual, n-trimestres, componentes del indicador), y finalmente los indicadores de SINIM (densidad poblacional, población total, proporción femenina y ruralidad).
+
+Finalmente, se realizó una verificación completa del panel para identificar posibles inconsistencias: búsqueda de códigos o comunas faltantes, detección de NA inesperados y revisión general de la estructura. Con todas las validaciones superadas, se exportó la base consolidada en formato xlsx, quedando lista para los análisis posteriores.
+
+### 9.4 Diccionario de Datos Final (`df_final`)
+
+A continuación se presenta el diccionario completo de variables que conforman `df_final`, la base integrada resultante del proceso de unificación entre SINIM, ENE y los datos electorales presidenciales del Servel. Este diccionario permite identificar el origen, naturaleza y función analítica de cada variable, organizándolas según su fuente y rol dentro del panel comunal–año. La estructura final combina información electoral, laboral y sociodemográfica, permitiendo realizar análisis longitudinales sobre el comportamiento electoral y su relación con fluctuaciones en el mercado laboral comunal.
 
 **1. Variables de Identificación**
 
@@ -420,7 +633,6 @@ La integración de estas fuentes permite modelar la relación entre estructura d
 | **poblacion_tot** | numérico | Población total residente en la comuna.             |
 | **porc_femenina** | numérico | Porcentaje de población femenina.                   |
 | **porc_rural**    | numérico | Porcentaje de población residente en zonas rurales. |
-
 
 </details>
 
