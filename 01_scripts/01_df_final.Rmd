@@ -164,10 +164,6 @@ Debido a esto, se decide eliminar estas 42 comunas tanto en SINIM como en la bas
 df_SINIM_clean <- df_SINIM |>
   anti_join(missing_from_ENE, by = "codigo")
 
-# Eliminamos las comunas ausentes en ENE desde la base de presidenciales
-df_presidencial_clean2 <- df_presidencial_clean |>
-  anti_join(missing_from_ENE, by = "codigo")
-
 # Verificación: revisar que las tres bases tengan el mismo universo de comunas
 df_SINIM_clean |> distinct(codigo) |> count()
 df_presidencial_clean2 |> distinct(codigo) |> count()
