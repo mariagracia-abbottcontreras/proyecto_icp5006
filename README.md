@@ -636,10 +636,57 @@ A continuación se presenta el diccionario completo de variables que conforman `
 
 </details>
 
+
 <details>
-  <summary><strong>10. Referencias</strong></summary>
+  <summary><strong>10. Análisis descriptivo inicial</strong></summary>
   
-## 10. Referencias
+## 10. Análisis descriptivo inicial
+
+</details>
+
+
+<details>
+  <summary><strong>11. Modelos econométricos</strong></summary>
+  
+## 11. Modelos econométricos
+
+### Modelo 1: Regresión lineal simple (OLS bivariada)
+
+### Modelo 2: Regresión múltiple con controles
+
+### Modelo 3: Regresión con efectos fijos regionales
+
+</details>
+
+
+<details>
+  <summary><strong>12. Pruebas de robustez y diagnóstico</strong></summary>
+  
+## 12. Pruebas de robustez y diagnóstico
+
+</details>
+
+
+<details>
+  <summary><strong>13. Presentación e interpretación de resultados</strong></summary>
+  
+## 13. Presentación e interpretación de resultados
+
+</details>
+
+
+<details>
+  <summary><strong>14. Síntesis e interpretación sustantiva</strong></summary>
+
+## 14. Síntesis e interpretación sustantiva
+
+</details>
+
+
+<details>
+  <summary><strong>15. Referencias</strong></summary>
+  
+## 15. Referencias
 
 Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. 
 
