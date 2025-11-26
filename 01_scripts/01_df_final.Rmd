@@ -95,9 +95,9 @@ df_presidencial_clean
 ## 2.4 Exportar nueva base
 
 ```{r}
-# Exportamos la base final con códigos comunales incorporados
+library(writexl)
 
-writexl::write_xlsx(df_presidencial_clean, here("02_outputs","df_presidencial_clean_final.xlsx"))
+write_xlsx(df_presidencial_clean, "df_presidenciales_clean_final.xlsx")
 ```
 
 
@@ -150,12 +150,51 @@ missing_from_ENE
 
 Las 42 comunas ausentes en la ENE se excluyen del análisis, dado que la encuesta no reporta estimaciones comunales para territorios con bajo tamaño muestral o falta de representatividad estadística. Esto asegura consistencia entre las bases y evita la introducción de valores faltantes estructurales.
 
+```{r}
+library(readxl)
+df_presidenciales_clean_final <- read_excel("df_presidenciales_clean_final.xlsx")
+```
 
 # 4. Unificar las bases: SINIM, Presidenciales y ENE
 
 Antes de realizar la unión final, es necesario asegurar que las tres bases compartan el mismo universo de comunas. Como se mostró en la sección anterior, la base ENE (Encuesta Nacional de Empleo del INE) no reporta datos comunales para 42 comunas, debido a restricciones de tamaño muestral. Esto ocurre porque ENE solo entrega estimaciones de desempleo comunal cuando existe suficiente representatividad estadística; comunas pequeñas, rurales o aisladas quedan fuera del operativo.
 
 Debido a esto, se decide eliminar estas 42 comunas tanto en SINIM como en la base de Presidenciales, de modo de trabajar únicamente con aquellas comunas para las cuales existe información completa en las tres fuentes. Esta decisión metodológica evita generar valores faltantes estructurales y garantiza la consistencia del dataset final.
+
+## 4.0 Reemplazar datos económicos de 2010 por los de 2011
+
+Dado que no existen datos económicos para la elección de 2010, se utilizarán los datos más cercanos, es decir, los datos de 2011. 
+
+```{r}
+library(dplyr)
+
+vars_a_reemplazar <- c(
+  "prop_desocup_anual",
+  "n_trimestres",
+  "prev_prop",
+  "laggdiff",
+  "mean_laggdiff_period",
+  "n_years_laggdiff_period"
+)
+
+df_ENE <- df_ENE %>%
+  
+  left_join(
+    df_ENE %>%
+      filter(ano_encuesta == 2011) %>%
+      select(comuna, all_of(vars_a_reemplazar)) %>%
+      rename_with(~ paste0(.x, "_2011"), vars_a_reemplazar),
+    by = "comuna"
+  ) %>%
+  
+
+  mutate(across(
+    all_of(vars_a_reemplazar),
+    ~ if_else(ano_encuesta == 2010, get(paste0(cur_column(), "_2011")), .x)
+  )) %>%
+  
+  select(-ends_with("_2011"))
+```
 
 ## 4.1 Eliminar las 42 comunas ausentes en ENE desde SINIM y Presidenciales
 
@@ -166,7 +205,7 @@ df_SINIM_clean <- df_SINIM |>
 
 # Verificación: revisar que las tres bases tengan el mismo universo de comunas
 df_SINIM_clean |> distinct(codigo) |> count()
-df_presidencial_clean2 |> distinct(codigo) |> count()
+df_presidenciales_clean_final |> distinct(codigo) |> count()
 df_ENE |> distinct(codigo) |> count()
 
 ```
@@ -179,7 +218,7 @@ df_ENE |> distinct(codigo) |> count()
 
 names(df_ENE)
 names(df_SINIM_clean)
-names(df_presidencial_clean2)
+names(df_presidenciales_clean_final)
 
 ```
 
@@ -189,7 +228,7 @@ names(df_presidencial_clean2)
 # Verificación final de claves
 df_ENE |> select(codigo, ano_encuesta) |> head()
 df_SINIM_clean |> select(codigo, año) |> head()
-df_presidencial_clean2 |> select(codigo, ano_de_eleccion) |> head()
+df_presidenciales_clean_final |> select(codigo, ano_de_eleccion) |> head()
 
 ```
 
@@ -217,12 +256,12 @@ Presidenciales no es una serie anual → no se une por año, sino por comuna y a
 
 ```{r}
 df_final <- df_panel |>
-  left_join(df_presidencial_clean2, 
+  left_join(df_presidenciales_clean_final, 
             by = c("codigo" = "codigo", "año" = "ano_de_eleccion"))
 
 ```
 
-En los años 2013 y 2017 → aparecen los votos
+En los años 2010, 2013 y 2017 → aparecen los votos
 
 En los otros años → quedan NA (correcto, no hubo elección)
 
