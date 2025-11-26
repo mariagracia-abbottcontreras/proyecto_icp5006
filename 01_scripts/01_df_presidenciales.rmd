@@ -43,24 +43,25 @@ glimpse(df_presidenciales)
 
 ## 2. Transformar variables
 
-Objetivo: generar una base con los resultados de los candidatos ganadores (Michelle Bachelet 2013 y Sebastián Piñera 2017), incluyendo votos comunales, porcentajes y totales de votos en cada comuna.
+Objetivo: generar una base con los resultados de los candidatos ganadores (Sebastián Piñera 2010, Michelle Bachelet 2013 y Sebastián Piñera 2017), incluyendo votos comunales, porcentajes y totales de votos en cada comuna.
 
 Pasos para esto: 
 
-1. **Seleccionar variables relevantes**: ano_de_eleccion, periodo, region, comuna, candidato_a, electo_a y votos_totales desde la base original df_presidenciales.
+1. **Seleccionar variables relevantes**: ano_de_eleccion, periodo, region, comuna, candidato_a, electo_a, votacion_presidencial y votos_totales desde la base original df_presidenciales.
 
-2. **Filtrar años de interés**: Se seleccionan únicamente las elecciones presidenciales de los años 2013 y 2017.
+2. **Filtrar años de interés**: Se seleccionan únicamente las elecciones presidenciales de los años 2010, 2013 y 2017.
 
 3. **Procesar cada elección por separado**:
 
-  - Para 2013, se agrupan los datos por region, comuna y candidato_a, sumando los votos obtenidos por cada candidato en cada comuna.
+  - Para 2010, se agrupan los datos por region, comuna y candidato_a, sumando los votos obtenidos por cada candidato en cada comuna.
   - Se calcula el total de votos comunales (sumando los votos de todos los candidatos de esa elección).
-  - Luego, se filtra solo a Michelle Bachelet Jeria, candidata electa en 2013.
+  - Luego, se filtra según votacion_presidencial para solo contar la segunda vuelta y también se filtrará para solo Sebastian Piñera, candidato electo en 2010.
   - Se calcula el porcentaje de votos obtenidos por comuna en relación con el total comunal.
-  - Finalmente, se agrega la variable ano_de_eleccion = 2013.
+  - Finalmente, se agrega la variable ano_de_eleccion = 2010.
+  - Para 2017, se repite el mismo procedimiento, filtrando posteriormente solo a Michelle Bachelet, candidato electo en esa elección, y se agrega ano_de_eleccion = 2013.
   - Para 2017, se repite el mismo procedimiento, filtrando posteriormente solo a Sebastián Piñera Echenique, candidato electo en esa elección, y se agrega ano_de_eleccion = 2017.
   
-4. **Unir bases procesadas**: Se combinan ambas tablas (bachelet_2013 y pinera_2017) en una sola base final utilizando bind_rows().
+4. **Unir bases procesadas**: Se combinan las tablas (pinera_2017, bachelet_2013 y pinera_2017) en una sola base final utilizando bind_rows().
 
 5. **Ordenar observaciones**: La base final (df_presidenciales_clean) se ordena por region, comuna y ano_de_eleccion para facilitar la comparación territorial y temporal.
 
@@ -68,26 +69,36 @@ Pasos para esto:
 # Función general para procesar una elección
 procesar_eleccion <- function(base, ano, candidato) {
   base %>%
-    filter(ano_de_eleccion == ano) %>%
+    filter(
+      ano_de_eleccion == ano,
+      votacion_presidencial == "SEGUNDA VOTACIÓN"
+    ) %>%
     group_by(region, comuna, candidato_a) %>%
-    summarise(votos_obtenidos = sum(votos_totales, na.rm = TRUE),
-              .groups = "drop") %>%
+    summarise(
+      votos_obtenidos = sum(votos_totales, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
     group_by(region, comuna) %>%
     mutate(total_de_votos = sum(votos_obtenidos, na.rm = TRUE)) %>%
     ungroup() %>%
     filter(candidato_a == candidato) %>%
     mutate(
       porcentaje_votos = round((votos_obtenidos / total_de_votos) * 100, 1),
-      ano_de_eleccion = ano) %>%
-    select(ano_de_eleccion, region, comuna, candidato_a,
-           votos_obtenidos, total_de_votos, porcentaje_votos)}
+      ano_de_eleccion = ano
+    ) %>%
+    select(
+      ano_de_eleccion, region, comuna, candidato_a,
+      votos_obtenidos, total_de_votos, porcentaje_votos
+    )
+}
 
-# Aplicar la función a ambas elecciones
+# Aplicar la función a elecciones
+pinera_2010 <- procesar_eleccion(df_presidenciales, 2010, "SEBASTIAN PIÑERA")
 bachelet_2013 <- procesar_eleccion(df_presidenciales, 2013, "MICHELLE BACHELET JERIA")
 pinera_2017 <- procesar_eleccion(df_presidenciales, 2017, "SEBASTIAN PIÑERA ECHENIQUE")
 
-# Unir ambas bases
-df_presidenciales_clean <- bind_rows(bachelet_2013, pinera_2017)
+# Unir bases
+df_presidenciales_clean <- bind_rows(pinera_2010, bachelet_2013, pinera_2017)
 
 # Ordenar observaciones
 df_presidenciales_clean <- df_presidenciales_clean %>%
