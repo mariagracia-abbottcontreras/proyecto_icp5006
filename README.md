@@ -247,8 +247,9 @@ Corresponde a la proporción de votos comunales obtenidos por el candidato presi
 
 Para el cálculo:
 
+- En **2010** (gobierno saliente: Bachelet 1, centroizquierda), el voto opositor se asocia a Sebastián Piñera (centroderecha).
 - En **2013** (gobierno saliente: Piñera, centroderecha), el voto opositor se asocia a Michelle Bachelet (centroizquierda).
-- En **2017** (gobierno saliente: Bachelet, centroizquierda), el voto opositor corresponde a Sebastián Piñera (centroderecha).
+- En **2017** (gobierno saliente: Bachelet 2, centroizquierda), el voto opositor corresponde a Sebastián Piñera (centroderecha).
 
 Se construirá como:
 
@@ -269,22 +270,37 @@ Esta variable captura la situación económica local y constituye el principal p
 Derivadas de SINIM, se incluyen como covariables para controlar diferencias estructurales y demográficas que podrían influir tanto en el desempleo como en el voto:
 
 - `porc_femenina`: porcentaje de población femenina.
-- `porc_rural`: porcentaje de población rural.
 - `poblacion_tot`: tamaño de la población comunal.
 - `densidad_pob`: densidad poblacional (hab/km²).
 
 ### 8.4. Análisis descriptivo inicial
 
-Antes de aplicar modelos de regresión, se realizará un análisis descriptivo y exploratorio, que incluirá:
+Antes de estimar los modelos de regresión, se realizará un análisis descriptivo y exploratorio del panel comunal (2010–2017) con el propósito de caracterizar el comportamiento territorial del desempleo y del voto opositor, además de evaluar la consistencia del conjunto de datos. Este análisis incluirá:
 
-- Estadísticas básicas (media, mediana, rango, desviación estándar) de todas las variables.
-- Visualización gráfica con `ggplot2`:
-  - Dispersión entre `tasa_desempleo` y `voto_opositor`.
-  - Mapas o diagramas de correlación comunal.
-- Verificación de valores faltantes y atípicos.
-- Cálculo de correlaciones bivariadas.
+- **Revisión de la estructura del panel**, verificando el número de observaciones por comuna, la presencia de duplicados, la existencia de períodos faltantes y la identificación de comunas sin información en ciertos años.
+  
+- **Cálculo de estadísticas descriptivas univariadas** para todas las variables del estudio, tales como tasa de desempleo, voto opositor, población, proporción de adultos mayores, escolaridad promedio y participación electoral (media, mediana, mínimos, máximos y desviación estándar).
+  
+- **Exploraciones gráficas** con `ggplot2`, que contemplarán:
+  
+  - Histogramas y distribuciones de la tasa de desempleo comunal.
+  - Histogramas del apoyo opositor en las elecciones presidenciales.
+  - Gráficos de dispersión entre tasa_desempleo y voto_opositor para identificar patrones preliminares.
+  - Series temporales comunales y nacionales del desempleo y del voto opositor entre 2010 y 2017.
+ 
+- **Identificación de valores atípicos y faltantes**, mediante resúmenes tabulares y funciones de diagnóstico que permitirán evaluar su magnitud y distribución territorial.
+  
+- **Estimación de correlaciones bivariadas**, incluyendo:
+  
+  - La correlación entre desempleo y voto opositor.
+  - La correlación entre desempleo y variables sociodemográficas.
+  - La correlación entre variables territoriales como densidad, ruralidad y participación electoral.
+ 
+- **Visualizaciones territoriales**, a través de mapas comunales que mostrarán la distribución espacial:
+  - De la tasa de desempleo por año.
+  - Del voto opositor en 2013 y 2017.
 
-Este paso busca caracterizar el comportamiento territorial del desempleo y del voto opositor, además de verificar la consistencia del panel.
+Este conjunto de procedimientos permitirá evaluar la calidad del panel comunal, identificar patrones territoriales relevantes y orientar la especificación de los modelos de regresión posteriores.
 
 ### 8.5. Modelos econométricos
 
@@ -292,13 +308,13 @@ El núcleo del plan de análisis consiste en la estimación de modelos de regres
 
 **Modelo 1: Regresión lineal simple (OLS bivariada)**
 
-> **VotoOpositorit ​= β0 ​+ β1​Desempleoit ​+ εit​**
+> **ΔVotoOpositorit ​= β0 ​+ β1​ΔDesempleoit ​+ εit​**
 
 Permite medir la relación directa entre el desempleo y el voto opositor, sin ajustar por otras variables. Se espera que β1 >0, es decir, que **mayores tasas de desempleo se asocien a un mayor voto por candidatos opositores.**
 
 **Modelo 2: Regresión múltiple con controles**
 
-> **VotoOpositorit ​= β0​ + β1​Desempleoit ​+ β2​PorcFemeninait​ + β3​PorcRuralit ​+ β4​DensidadPobit ​+ β5​PoblacionT + ... + εit**
+> **ΔVotoOpositorit ​= β0​ + β1Δ​Desempleoit ​+ β2​PorcFemeninait​ + β3​DensidadPobit ​+ β54PoblacionT + ... + εit**
 
 Este modelo ajusta por diferencias estructurales entre comunas, permitiendo aislar el efecto neto del desempleo sobre el voto opositor.
 
@@ -306,7 +322,7 @@ Este modelo ajusta por diferencias estructurales entre comunas, permitiendo aisl
 
 Dado que el análisis se basa en un panel (múltiples comunas a lo largo del tiempo), se aplicará un modelo de efectos fijos, que controla por características no observadas constantes en el tiempo (como historia política, cultura local o estructura productiva):
 
-> **VotoOpositorit ​= β0​ + β1​Desempleoit ​+ β2​Xit ​+ αi​ + γt ​+ εit**
+> **ΔVotoOpositorit ​= β0​ + β1​ΔDesempleoit ​+ β2​Xit ​+ αi​ + γt ​+ εit**
 
 Donde: 
 
@@ -316,34 +332,23 @@ Donde:
 
 ### 8.6. Pruebas de robustez y diagnóstico
 
-Se realizarán las siguientes pruebas de validación estadística:
+Para evaluar la validez estadística de los modelos estimados y la solidez de los resultados, se aplicarán diversas pruebas de diagnóstico y robustez. Estas incluirán:
 
-- Multicolinealidad: mediante el Variance Inflation Factor (VIF) (`car::vif()`).
-- Heterocedasticidad: prueba de Breusch–Pagan (`lmtest::bptest()`).
-- Normalidad de residuos: Shapiro–Wilk o visualización Q–Q plot.
-- Autocorrelación temporal: prueba de Wooldridge para paneles (`plm::pwartest()`).
-- Robustez de errores estándar: estimadores robustos tipo HC1 (`vcovHC`).
+- **Multicolinealidad**, evaluada mediante el cálculo del Variance Inflation Factor (VIF) utilizando la función `car::vif()`, con el fin de identificar posibles redundancias entre las variables explicativas.
+  
+- **Heterocedasticidad**, analizada mediante la prueba de Breusch–Pagan (`lmtest::bptest()`), complementada con la inspección de residuos ajustados versus predichos para detectar patrones sistemáticos.
+  
+- **Normalidad de residuos**, evaluada a través de gráficos Q–Q y distribuciones de residuos, con el propósito de observar posibles desviaciones respecto a la normalidad.
+  
+- **Autocorrelación** en datos de panel, examinada con la prueba de Wooldridge para autocorrelación serial en paneles (`plm::pwartest()`), dada la estructura temporal del conjunto de datos.
+  
+- **Robustez de errores estándar**, mediante:
+  - Errores estándar robustos HC1 para heterocedasticidad (`vcovHC()`).
+  - Errores estándar clusterizados por comuna, dados los patrones territoriales observados en los residuos y la estructura del panel.
 
-En caso de detectarse problemas, se ajustarán los modelos usando errores estándar robustos a heterocedasticidad y clustering comunal.
+En caso de identificarse problemas de heterocedasticidad, dependencia temporal o estructura territorial no capturada, los modelos se reestimarán utilizando errores estándar robustos y/o clusterizados, asegurando resultados consistentes y comparables entre especificaciones.
 
-### 8.7. Presentación e interpretación de resultados
-
-Los resultados se presentarán mediante:
-
-- Tablas con coeficientes estimados, errores estándar y niveles de significancia.
-- Gráficos de coeficientes (broom::tidy() + ggplot2).
-- Mapas de correlación comunal (voto opositor vs desempleo).
-- Comparación visual de medias y tendencias (2013–2017).
-
-Se analizará:
-
-- La magnitud y dirección del coeficiente β₁.
-- Las diferencias regionales o por tipo de comuna (urbana/rural).
-- La robustez del efecto al incluir controles o efectos fijos.
-
-Esto queda sujeto a posibles cambios futuros. 
-
-### 8.8. Síntesis e interpretación sustantiva
+### 8.7. Síntesis e interpretación sustantiva
 
 Finalmente, el análisis permitirá responder la hipótesis central del proyecto:
 
@@ -355,7 +360,7 @@ Se discutirán las implicancias políticas y sociales de este hallazgo, consider
 - Posibles diferencias territoriales en el comportamiento electoral.
 - La utilidad del desempleo comunal como indicador estructural para predecir tendencias políticas en Chile.
 
-### 8.9. Software y replicabilidad
+### 8.8. Software y replicabilidad
 
 Todo el análisis se realizará en RStudio, con los paquetes: `tidyverse`, `plm`, `broom`, `lmtest`, `car`, y `ggplot2`.
 
@@ -644,19 +649,289 @@ A continuación se presenta el diccionario completo de variables que conforman `
   
 ## 10. Análisis descriptivo inicial
 
-</details>
+El análisis descriptivo inicial tuvo como objetivo caracterizar las variaciones comunales en el desempleo y en el voto opositor, evaluando posibles patrones lineales entre ambas variables, identificando valores atípicos y explorando la estructura general del panel. Este conjunto de procedimientos permitió comprender el comportamiento de los datos antes de avanzar a los modelos de regresión de panel.
 
+### 10.1 Relación lineal entre cambios en desempleo y cambios en voto opositor
+
+Como primer paso, se evaluó la relación lineal entre las variaciones anuales del desempleo comunal y los cambios en la proporción de votos por la oposición. Para ello se construyó un gráfico de dispersión utilizando las variables `diff_prop_desocup_anual` (Δ desempleo) y `diff_proporcion_votos` (Δ voto opositor), ambas definidas como primeras diferencias entre elecciones presidenciales.
+
+```{r}
+library(ggplot2)
+
+g1 <- ggplot(df_final_full, aes(x = diff_prop_desocup_anual,
+                                y = diff_proporcion_votos)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    x = "Δ Desempleo (prop_desocup_anual)",
+    y = "Δ Voto Oposición (proporcion_votos)",
+    title = "Relación entre cambios en desempleo y cambios en votación por la oposición"
+  ) +
+  theme_minimal()
+
+g1
+```
+
+El gráfico muestra una relación lineal débil y altamente dispersa, donde la pendiente estimada del ajuste lineal indica una relación ligeramente negativa (–0.047 según la matriz de correlación). Esto implica que, descriptivamente, un aumento del desempleo no necesariamente se acompaña de un aumento del voto opositor; por el contrario, la asociación preliminar es mínima. Sin embargo, esta relación descriptiva no es concluyente y requiere análisis causal mediante modelos de panel.
+
+### 10.2. Boxplots para explorar dispersión y valores atípicos
+
+Con el objetivo de evaluar la distribución de las variables y la presencia de posibles outliers, se generaron boxplots para las dos variables clave del análisis en diferencias: Δ desempleo y Δ voto opositor.
+
+El uso de boxplots permite visualizar si los cambios entre elecciones presentan una variación marcada entre comunas. Efectivamente, se observó presencia de valores extremos, especialmente en Δ desempleo, donde algunas comunas muestran incrementos o disminuciones abruptas. En Δ voto opositor, si bien la dispersión es menor, igualmente se identifican casos con variaciones electorales muy superiores al promedio.
+
+```{r}
+library(ggplot2)
+
+ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(
+    title = "Boxplot de Δ Proporción de Votos",
+    y = "Δ Proporción de Votos"
+  ) +
+  theme_minimal()
+```
+
+[IMAGEN PROPORCION DE VOTOS]
+
+```{r}
+ggplot(df_final_full, aes(y = diff_prop_desocup_anual)) +
+  geom_boxplot(fill = "tomato", color = "black") +
+  labs(
+    title = "Boxplot de Δ Proporción de Desempleo",
+    y = "Δ Desempleo"
+  ) +
+  theme_minimal()
+```
+[IMAGEN PROPORCION DE DESEMPLEO]
+
+Estos resultados son consistentes con la heterogeneidad histórica entre comunas y permiten justificar el uso posterior de modelos con errores robustos o clusterizados.
+
+### 10.3. Conteo de valores faltantes (NAs)
+
+Para evaluar la consistencia y completitud del panel final, se realizó un conteo de valores faltantes para todas las variables en `df_final_full`. Esta inspección es fundamental para determinar la calidad del panel y anticipar eventuales problemas en la estimación.
+
+```{r}
+library(dplyr)
+
+df_final_full %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  tidyr::pivot_longer(cols = everything(),
+                      names_to = "Variable",
+                      values_to = "NAs")
+```
+
+El resultado mostró que la mayoría de las variables presentan muy pocos valores faltantes, concentrados en unas pocas comunas o en años con menor cobertura estadística. La variable `diff_proporcion_votos`, por ejemplo, solo está disponible para 2013 y 2017, lo que es consistente con la lógica de diferencias presidenciales. En conjunto, el nivel de NAs observados no compromete la estimación del modelo y es manejable mediante exclusión por caso completo.
+
+### 10.4. Matriz de correlación entre variables
+
+Finalmente, se estimó una matriz de correlaciones para las principales variables del análisis en diferencias:
+
+- `diff_proporcion_votos`
+- `diff_prop_desocup_anual`
+- `densidad_pob`
+- `poblacion_tot`
+- `porc_femenina`
+
+Se filtraron únicamente las observaciones con valores no faltantes en Δ voto opositor, lo que corresponde a los años electorales comparables (2013 y 2017).
+
+```{r}
+library(dplyr)
+library(corrplot)
+
+# Seleccionar las variables desde df_final_full
+vars_corr <- df_final_full %>%
+  filter(!is.na(diff_proporcion_votos)) %>%   # solo 2013 y 2017
+  select(
+    diff_proporcion_votos,
+    diff_prop_desocup_anual,
+    densidad_pob,
+    poblacion_tot,
+    porc_femenina,
+  )
+
+# Matriz de correlación
+corr_matrix <- cor(vars_corr, use = "pairwise.complete.obs")
+
+# Gráfico visual de correlación
+g2 <- corrplot(
+  corr_matrix,
+  method = "color",
+  type = "upper",
+  addCoef.col = "black",
+  tl.col = "black",
+  tl.srt = 45,
+  col = colorRampPalette(c("red", "white", "blue"))(200)
+)
+
+g2
+```
+
+[INSERTAR MATRIZ DE CORR]
+
+Los coeficientes de correlación obtenidos fueron:
+
+| Variable 1 -  Variable 2               |  Correlación |
+| -------------------------------------- | -----------  |
+| Δ voto opositor – Δ desempleo          |  –0.047      |   
+| Δ voto opositor – densidad poblacional |  –0.064      |          
+| Δ voto opositor – población total      |  –0.031      |             
+| Δ voto opositor – porcentaje femenino  |   0.009      |             
+
+Los resultados muestran que ninguna de las variables presenta correlaciones fuertes, lo que es positivo para el análisis posterior, ya que indica ausencia de multicolinealidad severa en las diferencias. Además, la correlación entre Δ desempleo y Δ voto opositor es muy débil, lo que refuerza la necesidad de utilizar modelos inferenciales robustos para evaluar si existe un efecto significativo.
+
+### 10.5 ¿Qué nos deja el análisis descriptivo?
+
+El análisis descriptivo inicial muestra que tanto las variaciones del desempleo como los cambios en el voto opositor presentan una marcada heterogeneidad territorial entre comunas. La relación lineal entre Δ desempleo y Δ voto opositor resulta débil y altamente dispersa, mientras que las correlaciones con variables sociodemográficas son bajas, lo que indica que no existen patrones simples o inmediatos que expliquen el comportamiento electoral en función de las condiciones laborales locales. Estos resultados sugieren que la dinámica comunal es más compleja de lo que las asociaciones bivariadas permiten observar, y refuerzan la necesidad de avanzar hacia modelos de panel y pruebas de robustez que evalúen rigurosamente si el desempleo tiene un efecto estadísticamente significativo sobre el voto opositor. En conjunto, el análisis descriptivo entrega un punto de partida sólido para el análisis inferencial presentado en la siguiente sección.
+
+</details>
 
 <details>
   <summary><strong>11. Modelos econométricos</strong></summary>
   
 ## 11. Modelos econométricos
 
-### Modelo 1: Regresión lineal simple (OLS bivariada)
+Con el fin de evaluar si los cambios en el desempleo comunal tienen un efecto significativo sobre los cambios en el voto opositor entre las elecciones presidenciales comparables (2013 y 2017), se estimaron distintos modelos econométricos en diferencias. Estos modelos permiten observar cómo la variación del contexto laboral comunal se relaciona con la variación del comportamiento electoral, ajustando progresivamente por controles territoriales, sociodemográficos y efectos fijos regionales y temporales.
 
-### Modelo 2: Regresión múltiple con controles
+### 11.1. Modelo bivariado
 
-### Modelo 3: Regresión con efectos fijos regionales
+El primer modelo estimado fue una regresión lineal simple donde la variable dependiente corresponde a la variación en la proporción de votos opositores (`diff_proporcion_votos`) y la variable independiente corresponde a la variación anual de la proporción de desempleo comunal (`diff_prop_desocup_anual`):
+
+```{r}
+modelo_bivariado <- lm(
+  diff_proporcion_votos ~ diff_prop_desocup_anual,
+  data = df_final_full
+)
+
+summary(modelo_bivariado)
+```
+[INSERTAR IMAGEN]
+
+**Resultados principales:**
+
+- El coeficiente de `diff_prop_desocup_anual` es –0.290 (p = 0.281), lo que indica que, en promedio, un incremento en el desempleo se asocia con una leve disminución del voto opositor, pero esta relación no es estadísticamente significativa.
+
+- El R² del modelo es 0.002, lo que sugiere que este modelo no captura variación sistemática en la variable dependiente.
+
+- El resultado es consistente con el análisis descriptivo, donde la relación lineal era débil.
+
+**Interpretación:** En términos bivariados, los cambios en el desempleo comunal no explican los cambios en el voto opositor. El efecto estimado es pequeño y estadísticamente nulo, lo que motiva introducir controles para capturar posibles heterogeneidades territoriales y temporales.
+
+### 11.2. Modelo bivariado con efectos fijos de año y región
+
+Dado que los cambios electorales pueden estar influenciados por dinámicas regionales y por el ciclo político nacional, se estimó un segundo modelo que incorpora efectos fijos por año (2013 vs. 2017) y por región.
+
+```{r}
+modelo_bivariado_control <- lm(
+  diff_proporcion_votos ~ 
+    diff_prop_desocup_anual +
+    factor(año) +
+    factor(region),
+    
+  data = df_final_full %>% filter(!is.na(diff_proporcion_votos))
+)
+summary(modelo_bivariado_control)
+```
+[INSERTAR IMAGEN]
+
+**Resultados principales:**
+
+- El coeficiente de `diff_prop_desocup_anual` cambia de signo y pasa a 0.159, pero continúa no siendo significativo (p = 0.450).
+
+- El efecto fijo del año 2017 es fuertemente significativo (coef. = –0.263, p < 0.001), lo cual refleja un cambio electoral nacional independiente del desempleo comunal.
+
+- El R² aumenta sustancialmente a 0.434, evidenciando que la heterogeneidad regional y temporal explica una gran parte de la variación del voto opositor en diferencias.
+
+- Ningún efecto fijo regional individual aparece como estadísticamente significativo.
+
+**Interpretación:** El cambio electoral entre 2013 y 2017, más que el desempleo comunal, explica la variación observada en el voto opositor. La inclusión de efectos fijos territoriales y temporales permite capturar dinámicas estructurales relevantes, pero aun así, el desempleo mantiene un efecto estadísticamente nulo.
+
+### 11.3. Modelo multivariado sin efectos fijos
+
+Luego, para evaluar si variables estructurales comunales intervienen en la relación entre desempleo y voto opositor, se estimó un modelo que incluye variables sociodemográficas:
+
+- densidad poblacional
+- población total
+- proporción femenina comunal
+
+```{r}
+modelo_multi_hibrido <- lm(
+  diff_proporcion_votos ~ 
+    diff_prop_desocup_anual + 
+    densidad_pob + 
+    poblacion_tot + 
+    porc_femenina,
+  data = df_final_full
+)
+summary(modelo_multi_hibrido)
+```
+[INSERTAR IMAGEN]
+
+**Resultados principales:**
+
+- El coeficiente de `diff_prop_desocup_anual` es –0.311, nuevamente no significativo (p = 0.255).
+
+- Ninguna de las variables sociodemográficas incluidas tiene un efecto significativo.
+
+- El R² es 0.008, lo cual indica que el modelo en su conjunto no explica variación relevante.
+
+**Interpretación:** La introducción de controles estructurales no cambia el resultado central: las variaciones del desempleo comunal no predicen variaciones del voto opositor. Además, las variables territoriales tampoco muestran efectos de magnitud relevante.
+
+### 11.4. Modelo multivariado con efectos fijos de año y región
+
+Finalmente, se estimó el modelo más completo, integrando las variables sociodemográficas junto con efectos fijos regionales y temporales:
+
+```{r}
+modelo_multi_control <- lm(
+  diff_proporcion_votos ~ 
+    diff_prop_desocup_anual +
+    densidad_pob +
+    poblacion_tot +
+    porc_femenina +
+    factor(año) +
+    factor(region),
+    
+  data = df_final_full %>% filter(!is.na(diff_proporcion_votos))
+)
+
+summary(modelo_multi_control)
+```
+[INSERTAR IMAGEN]
+
+**Resultados principales:**
+
+- El coeficiente de `diff_prop_desocup_anual` es 0.173, nuevamente no significativo (p = 0.418).
+
+- Las variables sociodemográficas continúan sin presentar efectos estadísticamente significativos.
+
+- El efecto fijo del año 2017 se mantiene altamente significativo (coef. –0.264, p < 0.001), consistente con un cambio político nacional generalizado.
+
+- El R² llega a 0.435, mostrando un buen nivel de ajuste cuando se incorporan efectos estructurales territoriales y temporales.
+
+- Ninguna región particular muestra un cambio electoral sistemático al controlar por año.
+
+**Interpretación:** Incluso en el modelo más completo, el desempleo comunal no presenta un efecto significativo sobre los cambios en el voto opositor. Los factores estructurales comunales tampoco explican las variaciones electorales. El cambio entre 2013 y 2017 es, nuevamente, el componente más influyente del modelo.
+
+### 10.5 ¿Qué nos dicen los modelos econométricos?
+
+Los cuatro modelos estimados coinciden en el mismo resultado central: **las variaciones en el desempleo comunal no tienen un efecto significativo sobre las variaciones en el voto opositor en Chile entre 2013 y 2017.**
+
+Independientemente de:
+
+- si el modelo es bivariado o multivariado,
+- si incorpora controles sociodemográficos,
+- si incluye efectos fijos regionales,
+- o si controla por el ciclo político nacional,
+
+el coeficiente asociado al desempleo siempre es pequeño y estadísticamente no significativo.
+
+Asimismo, los modelos indican que:
+
+- El cambio político nacional entre 2013 y 2017 (capturado por el efecto fijo de año) es el principal explicador del voto opositor.
+- La heterogeneidad territorial explica parte importante de la variación, pero no altera la ausencia de efecto del desempleo.
+- Los determinantes estructurales comunales no parecen influir en los cambios electorales cuando se analizan en diferencias.
+
+En resumen, la evidencia econométrica sugiere que, para este período y bajo un enfoque en diferencias comunales, **el desempleo no operó como un determinante del voto de castigo ni del voto opositor.**
 
 </details>
 
@@ -666,13 +941,141 @@ A continuación se presenta el diccionario completo de variables que conforman `
   
 ## 12. Pruebas de robustez y diagnóstico
 
-</details>
+Con el fin de evaluar la validez interna de los modelos estimados y asegurar que las inferencias realizadas no dependan de supuestos estadísticos frágiles ni de observaciones atípicas, se aplicó un conjunto de pruebas de robustez y diagnóstico. Estas pruebas permiten revisar multicolinealidad, normalidad de residuos, homocedasticidad, influencia de observaciones extremas y consistencia de los errores estándar mediante clustering. La combinación de estas evaluaciones fortalece la interpretación general de los resultados e identifica posibles problemas en el ajuste del modelo.
 
+### 12.1. Multicolinealidad
 
-<details>
-  <summary><strong>13. Presentación e interpretación de resultados</strong></summary>
-  
-## 13. Presentación e interpretación de resultados
+La primera prueba corresponde a la verificación de multicolinealidad entre regresores mediante el Variance Inflation Factor (VIF), lo que permite evaluar si alguna variable explicativa está altamente correlacionada con otra, afectando la estabilidad de los coeficientes. Para ello se empleó la función car::vif() sobre el modelo multivariado:
+
+```{r}
+library(car)
+vif(modelo_multi_hibrido)
+```
+**Resultados obtenidos:**
+
+| Variable                           | VIF   |
+| ---------------------------------- | ----- |
+| Diferencia proporción desocupación | 1.006 |
+| Densidad poblacional               | 1.231 |
+| Población total                    | 1.259 |
+| Proporción población femenina      | 1.105 |
+
+Los valores se ubican todos entre **1.00 y 1.26**, lo que indica ausencia total de multicolinealidad problemática (convencionalmente, VIF > 5 o 10 se considera riesgoso). Esto implica que cada regresor aporta información independiente en la estimación, y que los coeficientes no se ven inflados por redundancia estadística entre las variables. La interpretación es clara: **no existe multicolinealidad** en el modelo.
+
+### 12.2. Normalidad de los residuos
+
+Posteriormente se evaluó si los residuos del modelo multivariado siguen aproximadamente una distribución normal, utilizando un gráfico Q–Q plot. Esta inspección es relevante dado que los supuestos del modelo OLS requieren normalidad para una correcta inferencia en muestras pequeñas, aunque en muestras grandes el impacto es menor.
+
+```{r}
+g3 <- qqnorm(resid(modelo_multi_hibrido))
+
+g3
+```
+[INSERTAR GRAFICO]
+
+El gráfico Q–Q muestra que la mayoría de los puntos se ajustan razonablemente a la diagonal teórica. Si bien se observan desviaciones en las colas —un patrón común en datos comunales provenientes de territorios muy heterogéneos— estas no son suficientemente grandes como para invalidar el modelo ni comprometer la inferencia. En términos prácticos, los residuos presentan un comportamiento suficientemente cercano a la normalidad.
+
+### 12.3. Homocedasticidad (varianza constante de los errores)
+
+La homocedasticidad se evaluó mediante el gráfico de residuos vs. valores ajustados (`plot(modelo, which=1)`), lo que permite revisar visualmente si existe una estructura sistemática en la dispersión de los residuos.
+
+```{r}
+g4 <- plot(modelo_multi_hibrido, which = 1)
+
+g4
+```
+[INSERTAR GRAFICO]
+
+El gráfico resultante no muestra un patrón de “embudo” ni un aumento sistemático de la varianza de los residuos a medida que cambian los valores predichos. Al contrario, la dispersión se mantiene relativamente constante en todo el rango de predicción. Esto sugiere que **no existe evidencia de heterocedasticidad severa.**
+
+Dado que este tipo de diagnóstico puede ser sensible, y para asegurar inferencias conservadoras, se complementó con estimaciones de errores estándar robustos y agrupados (clustering), reportados más adelante. Esto permite reforzar las conclusiones incluso ante posibles desviaciones leves del supuesto.
+
+### 12.4. Observaciones influyentes (Distancias de Cook)
+
+Para identificar posibles comunas atípicas con influencia desproporcionada en los resultados, se calcularon las Distancias de Cook. Este indicador permite detectar observaciones que, de ser removidas, alteran significativamente los coeficientes del modelo.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+df_cook <- data.frame(
+  obs = 1:length(cooks.distance(modelo_multi_hibrido)),
+  cook = cooks.distance(modelo_multi_hibrido)
+)
+
+g5 <- ggplot(df_cook, aes(x = obs, y = cook)) +
+  geom_segment(aes(xend = obs, yend = 0)) +
+  geom_point(color = "red") +
+  geom_hline(yintercept = 4/nrow(df_cook), linetype = "dashed", color = "blue") +
+  labs(
+    title = "Distancias de Cook (Observaciones influyentes)",
+    x = "Observación",
+    y = "Distancia de Cook"
+  ) +
+  theme_minimal()
+
+g5
+```
+[INSERTAR GRAFICO]
+
+El umbral convencional (4/n ≈ 0.003) permitió identificar un conjunto reducido de comunas con valores relativamente altos. La observación más influyente presenta un valor de **0.086**, que, aunque mayor que el umbral teórico, sigue siendo moderado.
+
+Para evaluar si estas observaciones distorsionan los resultados se estimó un modelo alternativo excluyéndolas:
+
+```{r}
+df_sin_influyentes <- df_final_full[-influyentes, ]
+
+modelo_sin_cook <- lm(
+  diff_proporcion_votos ~ diff_prop_desocup_anual +
+    densidad_pob + poblacion_tot + porc_femenina + porc_rural,
+  data = df_sin_influyentes
+)
+summary(modelo_sin_cook)
+```
+
+El coeficiente de la variable clave (`diff_prop_desocup_anual`) se mantuvo prácticamente inalterado:
+
+- Antes: coeficiente ≈ –0.30 (p > 0.30)
+
+- Después: coeficiente ≈ –0.016 (p > 0.95)
+
+Además, el patrón de significancia de los controles tampoco cambia sustantivamente. Esto confirma que los outliers no alteran la interpretación central del modelo.
+
+### 12.5. Errores estándar robustos mediante clustering por comuna
+
+Dado que el análisis utiliza datos comunales que pueden presentar correlación intra-unidad a lo largo del tiempo, se estimaron errores estándar robustos agrupados por comuna mediante `vcovCL()`.
+
+```{r}
+library(lmtest)
+library(sandwich)
+
+cluster_comuna <- coeftest(
+  modelo_multi_hibrido,
+  vcov = vcovCL(modelo_multi_hibrido, cluster = df_final_full$comuna)
+)
+
+cluster_comuna
+```
+
+Los resultados con clustering confirman la estabilidad de las conclusiones:
+
+- `diff_prop_desocup_anual` **sigue siendo no significativa** (p = 0.39).
+- `densidad_pob aparece` como significativa bajo clustering (lo cual revela sensibilidad a la estructura territorial, pero no afecta la hipótesis principal).
+- `poblacion_tot`, `porc_femenina` e intercepto se mantienen sin significancia.
+
+La incorporación de errores estándar agrupados refuerza que los supuestos estadísticos no están sesgando los resultados, y que el efecto estimado para el desempleo es robusto ante autocorrelación dentro de las comunas.
+
+### 12.6 ¿Qué nos dejan las pruebas de robustez y diagnóstico?
+
+Las pruebas implementadas permiten afirmar que:
+
+- No existe multicolinealidad entre regresores.
+- Los residuos presentan un comportamiento aceptablemente normal.
+- No se detecta heterocedasticidad grave.
+- Las observaciones influyentes no modifican las conclusiones.
+- Los errores estándar robustos por comuna confirman que el desempleo no tiene un efecto estadísticamente significativo.
+
+En conjunto, los diagnósticos refuerzan la idea de que los resultados obtenidos son confiables y estables, y que el desempleo comunal no explica los cambios en el voto opositor en las elecciones presidenciales consideradas.
 
 </details>
 
@@ -680,7 +1083,9 @@ A continuación se presenta el diccionario completo de variables que conforman `
 <details>
   <summary><strong>14. Síntesis e interpretación sustantiva</strong></summary>
 
-## 14. Síntesis e interpretación sustantiva
+## 13. Síntesis e interpretación sustantiva
+
+
 
 </details>
 
@@ -688,7 +1093,7 @@ A continuación se presenta el diccionario completo de variables que conforman `
 <details>
   <summary><strong>15. Referencias</strong></summary>
   
-## 15. Referencias
+## 14. Referencias
 
 Cerda, R., & Vergara, R. (2009). *Voto económico en Chile: Nuevos resultados y explicación de la falta de evidencia robusta.* Estudios Públicos, (115), 33–72. 
 
