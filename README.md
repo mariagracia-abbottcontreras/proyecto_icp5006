@@ -158,14 +158,16 @@ Estas variables de control permiten aislar el efecto del desempleo sobre el voto
 
 El modelo estimado es el siguiente:
 
-**OppoVoteᵢ,ₜ = β₀ + β₁·ΔDesempleoᵢ,ₜ + β₂·Zᵢ,ₜ + εᵢ,ₜ**
+**ΔOppoVoteᵢ,ₜ = γ₀ + γ₁·ΔDesempleoᵢ,ₜ + γ₂·ΔZᵢ,ₜ + uᵢ,ₜ**
 
 **Donde:**
-- *OppoVoteᵢ,ₜ*: porcentaje de votación por el candidato de oposición en la comuna *i* en la elección presidencial *t*.  
-- *ΔDesempleoᵢ,ₜ*: diferencia del desempleo entre los periodos *t* y *t−1* (cambio temporal del desempleo).  
-- *Zᵢ,ₜ*: conjunto de covariables de control.  
-- *β₀*, *β₁*, *β₂*: coeficientes del modelo.  
-- *εᵢ,ₜ*: término de error.
+- *ΔOppoVoteᵢ,ₜ*: cambio en el porcentaje de votación por el candidato de oposición en la comuna *i* entre las elecciones *t* y *t−1*.  
+- *ΔDesempleoᵢ,ₜ*: cambio en la tasa de desempleo entre los periodos *t* y *t−1*.  
+- *ΔZᵢ,ₜ*: cambio en el conjunto de covariables de control entre elecciones.  
+- *γ₀*, *γ₁*, *γ₂*: coeficientes del modelo.  
+- *uᵢ,ₜ*: término de error.
+
+Esta especificación en primeras diferencias permite comparar cada comuna consigo misma entre elecciones, eliminando todos los factores que son constantes en el tiempo (por ejemplo: preferencias políticas históricas, estructura productiva, composición sociodemográfica estable, etc.). Así, el modelo identifica cómo los cambios en el desempleo dentro de cada comuna se relacionan con los cambios en el comportamiento electoral.
 
 **Integración de las bases de datos:**
 
