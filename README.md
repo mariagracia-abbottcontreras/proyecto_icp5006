@@ -671,6 +671,7 @@ g1 <- ggplot(df_final_full, aes(x = diff_prop_desocup_anual,
 
 g1
 ```
+![Gráfico 1](./03_anexos/gráfico_1.png)
 
 El gráfico muestra una relación lineal débil y altamente dispersa, donde la pendiente estimada del ajuste lineal indica una relación ligeramente negativa (–0.047 según la matriz de correlación). Esto implica que, descriptivamente, un aumento del desempleo no necesariamente se acompaña de un aumento del voto opositor; por el contrario, la asociación preliminar es mínima. Sin embargo, esta relación descriptiva no es concluyente y requiere análisis causal mediante modelos de panel.
 
@@ -683,27 +684,31 @@ El uso de boxplots permite visualizar si los cambios entre elecciones presentan 
 ```{r}
 library(ggplot2)
 
-ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
+g2 <- ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
   geom_boxplot(fill = "skyblue", color = "black") +
   labs(
     title = "Boxplot de Δ Proporción de Votos",
     y = "Δ Proporción de Votos"
   ) +
   theme_minimal()
+
+g2
 ```
 
-[IMAGEN PROPORCION DE VOTOS]
+![Gráfico 2](./03_anexos/gráfico_2.png)
 
 ```{r}
-ggplot(df_final_full, aes(y = diff_prop_desocup_anual)) +
+g3 <- ggplot(df_final_full, aes(y = diff_prop_desocup_anual)) +
   geom_boxplot(fill = "tomato", color = "black") +
   labs(
     title = "Boxplot de Δ Proporción de Desempleo",
     y = "Δ Desempleo"
   ) +
   theme_minimal()
+
+g3
 ```
-[IMAGEN PROPORCION DE DESEMPLEO]
+![Gráfico 3](./03_anexos/gráfico_3.png)
 
 Estos resultados son consistentes con la heterogeneidad histórica entre comunas y permiten justificar el uso posterior de modelos con errores robustos o clusterizados.
 
@@ -754,7 +759,9 @@ vars_corr <- df_final_full %>%
 corr_matrix <- cor(vars_corr, use = "pairwise.complete.obs")
 
 # Gráfico visual de correlación
-g2 <- corrplot(
+png("../03_anexos/gráfico_4.png", width = 1800, height = 1500, res = 300)
+
+corrplot(
   corr_matrix,
   method = "color",
   type = "upper",
@@ -764,10 +771,9 @@ g2 <- corrplot(
   col = colorRampPalette(c("red", "white", "blue"))(200)
 )
 
-g2
+dev.off()
 ```
-
-[INSERTAR MATRIZ DE CORR]
+![Gráfico 4](./03_anexos/gráfico_4.png)
 
 Los coeficientes de correlación obtenidos fueron:
 
@@ -805,7 +811,7 @@ modelo_bivariado <- lm(
 
 summary(modelo_bivariado)
 ```
-[INSERTAR IMAGEN]
+[Ver tabla](./03_anexos/modelo_bivariado_github.md)
 
 **Resultados principales:**
 
