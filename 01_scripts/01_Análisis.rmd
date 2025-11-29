@@ -180,6 +180,28 @@ modelo_bivariado <- lm(
 summary(modelo_bivariado)
 ```
 
+```{r}
+library(stargazer)
+
+# Crear el archivo en 03_anexos
+stargazer(
+  modelo_bivariado,
+  type = "html",
+  out.header = FALSE,     # ← necesario para GitHub
+  title = "Modelo de Regresión Bivariado",
+  dep.var.labels = "Diferencia en proporción de votos",
+  covariate.labels = c(
+    "Diferencia proporción desocupación anual"
+  ),
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+  notes = "Estimaciones del modelo bivariado. *p<0.1; **p<0.05; ***p<0.01",
+  out = "../03_anexos/modelo_bivariado_github.html"   # ← archivo en 03_anexos
+)
+
+```
+
+
 # Modelo Bi variado con Efecto Fijo Año + Región
 ```{r}
 modelo_bivariado_control <- lm(
@@ -193,6 +215,50 @@ modelo_bivariado_control <- lm(
 
 summary(modelo_bivariado_control)
 ```
+
+```{r}
+library(stargazer)
+
+stargazer(
+  modelo_bivariado_control,
+  type = "html",
+  out.header = FALSE,   # necesario para que GitHub lo renderice
+  title = "Modelo Bivariado con Efectos Fijos (Año y Región)",
+  dep.var.labels = "Diferencia en proporción de votos",
+
+  # No omitimos nada → se muestran todos los efectos fijos
+  omit = NULL,
+
+  covariate.labels = c(
+    "(Intercepto)",
+    "Dif. prop. desocupación anual",
+    "Año: 2017",
+    "Región: Aisén",
+    "Región: Arica y Parinacota",
+    "Región: Antofagasta",
+    "Región: Atacama",
+    "Región: Coquimbo",
+    "Región: La Araucanía",
+    "Región: Los Lagos",
+    "Región: Los Ríos",
+    "Región: Magallanes",
+    "Región: Tarapacá",
+    "Región: Valparaíso",
+    "Región: Biobío",
+    "Región: O'Higgins (1)",
+    "Región: O'Higgins (2)",
+    "Región: Maule"
+  ),
+
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+  notes = "Incluye todos los efectos fijos. *p<0.1; **p<0.05; ***p<0.01",
+
+  out = "../03_anexos/modelo_bivariado_control_COMPLETO.html"
+)
+```
+
+
 
 # Modelo Multivariado
 ```{r}
@@ -302,7 +368,7 @@ library(stargazer)
 stargazer(
   modelo_multi_control,
   type = "html",
-  out.header = FALSE,   # 👈 clave para que GitHub muestre la tabla
+  out.header = FALSE,   # clave para que GitHub muestre la tabla
   title = "Modelo de Regresión Multivariado con Controles de Año y Región",
   dep.var.labels = "Diferencia de proporción de votos",
   covariate.labels = c(
@@ -316,13 +382,13 @@ stargazer(
   digits = 3,
   keep.stat = c("rsq", "adj.rsq", "f", "ser"),
   
-  # 👇 Esto controla qué se omite en la tabla
+  #  Esto controla qué se omite en la tabla
   omit = c("factor(año)", "factor(region)"),
   omit.labels = c("Efectos fijos de año", "Efectos fijos de región"),
   
   notes = "Modelo con efectos fijos por año y región. *p<0.1; **p<0.05; ***p<0.01",
   
-  out = "../03_anexos/modelo_multi_control_github.html"  # 👈 se guarda aquí
+  out = "../03_anexos/modelo_multi_control_github.html"  #  se guarda aquí
 )
 ```
 
