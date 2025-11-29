@@ -17,7 +17,9 @@ options(scipen = 999)
 # Bases 
 ```{r}
 library(readxl)
-df_final_full <- read_excel("df_final_full.xlsx")
+library(here)
+
+df_final_full <- read_excel(here("02_outputs","df_final_full.xlsx"))
 ```
 
 ### Filtrar Elección 2010, 2013 y 2017
@@ -77,6 +79,8 @@ g1 <- ggplot(df_final_full, aes(x = diff_prop_desocup_anual,
   theme_minimal()
 
 g1 
+
+ggsave("../03_anexos/gráfico_1.png", g1, width = 10, height = 6, dpi = 300)
 ```
 
 
@@ -84,7 +88,7 @@ g1
 ```{r}
 library(ggplot2)
 
-ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
+g2 <- ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
   geom_boxplot(fill = "skyblue", color = "black") +
   labs(
     title = "Boxplot de Δ Proporción de Votos",
@@ -92,16 +96,26 @@ ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
   ) +
   theme_minimal()
 
+g2
+
+ggsave("../03_anexos/gráfico_2.png", g2, width = 10, height = 6, dpi = 300)
+
 ```
 
+
+
 ```{r}
-ggplot(df_final_full, aes(y = diff_prop_desocup_anual)) +
+g3 <- ggplot(df_final_full, aes(y = diff_prop_desocup_anual)) +
   geom_boxplot(fill = "tomato", color = "black") +
   labs(
     title = "Boxplot de Δ Proporción de Desempleo",
     y = "Δ Desempleo"
   ) +
   theme_minimal()
+
+g3
+
+ggsave("../03_anexos/gráfico_3.png", g3, width = 10, height = 6, dpi = 300)
 ```
 
 ### Contar NAs de variables 
@@ -135,8 +149,12 @@ vars_corr <- df_final_full %>%
 # Matriz de correlación
 corr_matrix <- cor(vars_corr, use = "pairwise.complete.obs")
 
+
 # Gráfico visual de correlación
-g2 <- corrplot(
+
+png("../03_anexos/gráfico_4.png", width = 1800, height = 1500, res = 300)
+
+corrplot(
   corr_matrix,
   method = "color",
   type = "upper",
@@ -146,7 +164,11 @@ g2 <- corrplot(
   col = colorRampPalette(c("red", "white", "blue"))(200)
 )
 
+dev.off()
+
 ```
+
+
 
 # Modelo Bi variado 
 ```{r}
@@ -208,6 +230,29 @@ stargazer(
 ```
 
 
+```{r}
+stargazer(
+  modelo_multi_hibrido,
+  type = "html",
+  out.header = FALSE,        # 👈 necesario para que GitHub muestre la tabla
+  title = "Modelo de Regresión Multivariado",
+  dep.var.labels = "Variable dependiente",
+  covariate.labels = c(
+    "Diferencia de proporción de desocupación",
+    "Densidad poblacional",
+    "Población total",
+    "Proporción de población femenina", 
+    "Intercepto"
+  ),
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+  notes = "Estimaciones del modelo de regresión multivariado. *p<0.1; **p<0.05; ***p<0.01",
+  out = "../03_anexos/modelo_multi_hibrido_github.html"   # 👈 aquí se guarda
+)
+```
+
+
+
 # Modelos con efecto fijo Año y Región
 ```{r}
 modelo_multi_control <- lm(
@@ -250,6 +295,38 @@ stargazer(
 )
 ```
 
+
+```{r}
+library(stargazer)
+
+stargazer(
+  modelo_multi_control,
+  type = "html",
+  out.header = FALSE,   # 👈 clave para que GitHub muestre la tabla
+  title = "Modelo de Regresión Multivariado con Controles de Año y Región",
+  dep.var.labels = "Diferencia de proporción de votos",
+  covariate.labels = c(
+    "Diferencia de proporción de desocupación anual",
+    "Densidad poblacional",
+    "Población total",
+    "Proporción de población femenina",
+    "Año 2017 (efectos fijos)",
+    "Región (efectos fijos)"
+  ),
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+  
+  # 👇 Esto controla qué se omite en la tabla
+  omit = c("factor(año)", "factor(region)"),
+  omit.labels = c("Efectos fijos de año", "Efectos fijos de región"),
+  
+  notes = "Modelo con efectos fijos por año y región. *p<0.1; **p<0.05; ***p<0.01",
+  
+  out = "../03_anexos/modelo_multi_control_github.html"  # 👈 se guarda aquí
+)
+```
+
+
 ## Supuestos 
 
 ### Multicolinealidad
@@ -260,13 +337,39 @@ vif(modelo_multi_hibrido)
 
 ### Normalidad de Residuos
 ```{r}
-qqnorm(resid(modelo_multi_hibrido))
+
+g5 <- qqnorm(resid(modelo_multi_hibrido))
+
 ```
+
+
+```{r}
+png("../03_anexos/gráfico_5.png", width = 1800, height = 1800, res = 300)
+
+qqnorm(resid(modelo_multi_hibrido),
+       main = "QQ-Plot de los residuos",
+       pch = 20)
+
+qqline(resid(modelo_multi_hibrido), col = "red", lwd = 2)
+
+dev.off()
+```
+
 
 ### Homoscedasticidad
 ```{r}
 plot(modelo_multi_hibrido, which = 1)
 ```
+
+```{r}
+png("../03_anexos/gráfico_6.png",
+    width = 2000, height = 1500, res = 200)
+
+plot(modelo_multi_hibrido, which = 1)
+
+dev.off()
+```
+
 
 ### Distancias de Cook
 ```{r}
@@ -278,7 +381,7 @@ df_cook <- data.frame(
   cook = cooks.distance(modelo_multi_hibrido)
 )
 
-g10 <- ggplot(df_cook, aes(x = obs, y = cook)) +
+g7 <- ggplot(df_cook, aes(x = obs, y = cook)) +
   geom_segment(aes(xend = obs, yend = 0)) +
   geom_point(color = "red") +
   geom_hline(yintercept = 4/nrow(df_cook), linetype = "dashed", color = "blue") +
@@ -289,8 +392,12 @@ g10 <- ggplot(df_cook, aes(x = obs, y = cook)) +
   ) +
   theme_minimal()
 
-g10
+g7
+
+ggsave("../03_anexos/gráfico_7.png", g7, width = 10, height = 6, dpi = 300)
 ```
+
+
 
 ```{r}
 umbral <- 4 / nrow(df_cook)
@@ -315,6 +422,38 @@ modelo_sin_cook <- lm(
 
 summary(modelo_sin_cook)
 ```
+
+
+
+```{r}
+library(stargazer)
+
+stargazer(
+  modelo_sin_cook,
+  type = "html",
+  out.header = FALSE,    # necesario para que GitHub muestre la tabla
+  title = "Modelo sin Observaciones Influyentes (Cook's Distance)",
+  dep.var.labels = "Diferencia de proporción de votos",
+  
+  covariate.labels = c(
+    "Diferencia de proporción de desocupación anual",
+    "Densidad poblacional",
+    "Población total",
+    "Proporción de población femenina",
+    "Proporción de población rural"
+  ),
+  
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+
+  notes = "Modelo estimado excluyendo observaciones influyentes según Cook's Distance. *p<0.1; **p<0.05; ***p<0.01",
+  
+  out = "../03_anexos/modelo_sin_cook_github.html"   #  Se guarda aquí
+)
+```
+
+
+
 
 
 ### Cluster por Comuna 
@@ -348,14 +487,20 @@ g11 <- ggplot(df_final_full, aes(x = diff_prop_desocup_anual,
   theme_minimal()
 
 g11
+
+ggsave("../03_anexos/gráfico_11.png", g11, width = 10, height = 6, dpi = 300)
 ```
+
+
+
+
 
 ```{r}
 df_plot <- df_final_full %>%
   mutate(distancia = sqrt(diff_prop_desocup_anual^2 +
                           diff_proporcion_votos^2))
 
-ggplot(df_plot, aes(x = diff_prop_desocup_anual,
+g12 <- ggplot(df_plot, aes(x = diff_prop_desocup_anual,
                     y = diff_proporcion_votos,
                     color = distancia)) +
   geom_point(alpha = 0.8, size = 2) +
@@ -369,7 +514,14 @@ ggplot(df_plot, aes(x = diff_prop_desocup_anual,
     color = "Distancia"
   ) +
   theme_minimal()
+g12
+
+ggsave("../03_anexos/gráfico_12.png", g12, width = 10, height = 6, dpi = 300)
+
 ```
+
+
+
 
 ```{r}
 library(ggplot2)
@@ -435,12 +587,20 @@ ggplot(df_year, aes(x = diff_prop_desocup_anual,
     theme_minimal()
 }
 
-g12 <- plot_outliers_xy(df_base, 2013)
-g13 <- plot_outliers_xy(df_base, 2017)
+g13 <- plot_outliers_xy(df_base, 2013)
+g14 <- plot_outliers_xy(df_base, 2017)
 
-g12
 g13
+g14
+
+ggsave("../03_anexos/gráfico_13.png", g13, width = 10, height = 6, dpi = 300)
+ggsave("../03_anexos/gráfico_14.png", g14, width = 10, height = 6, dpi = 300)
+
 ```
+
+
+
+
 
 ```{r}
 library(ggplot2)
