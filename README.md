@@ -1179,11 +1179,9 @@ Los valores se ubican todos entre **1.00 y 1.26**, lo que indica ausencia total 
 Posteriormente se evaluó si los residuos del modelo multivariado siguen aproximadamente una distribución normal, utilizando un gráfico Q–Q plot. Esta inspección es relevante dado que los supuestos del modelo OLS requieren normalidad para una correcta inferencia en muestras pequeñas, aunque en muestras grandes el impacto es menor.
 
 ```{r}
-g3 <- qqnorm(resid(modelo_multi_hibrido))
-
-g3
+g5 <- qqnorm(resid(modelo_multi_hibrido))
 ```
-[INSERTAR GRAFICO]
+![Gráfico 5](./03_anexos/gráfico_5.png)
 
 El gráfico Q–Q muestra que la mayoría de los puntos se ajustan razonablemente a la diagonal teórica. Si bien se observan desviaciones en las colas —un patrón común en datos comunales provenientes de territorios muy heterogéneos— estas no son suficientemente grandes como para invalidar el modelo ni comprometer la inferencia. En términos prácticos, los residuos presentan un comportamiento suficientemente cercano a la normalidad.
 
@@ -1192,11 +1190,10 @@ El gráfico Q–Q muestra que la mayoría de los puntos se ajustan razonablement
 La homocedasticidad se evaluó mediante el gráfico de residuos vs. valores ajustados (`plot(modelo, which=1)`), lo que permite revisar visualmente si existe una estructura sistemática en la dispersión de los residuos.
 
 ```{r}
-g4 <- plot(modelo_multi_hibrido, which = 1)
-
-g4
+plot(modelo_multi_hibrido, which = 1)
 ```
-[INSERTAR GRAFICO]
+
+![Gráfico 6](./03_anexos/gráfico_6.png)
 
 El gráfico resultante no muestra un patrón de “embudo” ni un aumento sistemático de la varianza de los residuos a medida que cambian los valores predichos. Al contrario, la dispersión se mantiene relativamente constante en todo el rango de predicción. Esto sugiere que **no existe evidencia de heterocedasticidad severa.**
 
@@ -1215,7 +1212,7 @@ df_cook <- data.frame(
   cook = cooks.distance(modelo_multi_hibrido)
 )
 
-g5 <- ggplot(df_cook, aes(x = obs, y = cook)) +
+g7 <- ggplot(df_cook, aes(x = obs, y = cook)) +
   geom_segment(aes(xend = obs, yend = 0)) +
   geom_point(color = "red") +
   geom_hline(yintercept = 4/nrow(df_cook), linetype = "dashed", color = "blue") +
@@ -1225,10 +1222,9 @@ g5 <- ggplot(df_cook, aes(x = obs, y = cook)) +
     y = "Distancia de Cook"
   ) +
   theme_minimal()
-
-g5
 ```
-[INSERTAR GRAFICO]
+
+![Gráfico 7](./03_anexos/gráfico_7.png)
 
 El umbral convencional (4/n ≈ 0.003) permitió identificar un conjunto reducido de comunas con valores relativamente altos. La observación más influyente presenta un valor de **0.086**, que, aunque mayor que el umbral teórico, sigue siendo moderado.
 
@@ -1243,6 +1239,42 @@ modelo_sin_cook <- lm(
   data = df_sin_influyentes
 )
 summary(modelo_sin_cook)
+```
+
+```{r}
+Modelo sin Observaciones Influyentes (Cook's Distance)
+======================================================================================================================================================
+                                                                                         Dependent variable:                                          
+                                               -------------------------------------------------------------------------------------------------------
+                                                                                  Diferencia de proporción de votos                                   
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Diferencia de proporción de desocupación anual                                                 -0.016                                                 
+                                                                                               (0.314)                                                
+                                                                                                                                                      
+Densidad poblacional                                                                           0.00001                                                
+                                                                                              (0.00000)                                               
+                                                                                                                                                      
+Población total                                                                               -0.00000*                                               
+                                                                                              (0.00000)                                               
+                                                                                                                                                      
+Proporción de población femenina                                                               -0.002                                                 
+                                                                                               (0.003)                                                
+                                                                                                                                                      
+Proporción de población rural                                                                  0.001*                                                 
+                                                                                              (0.0004)                                                
+                                                                                                                                                      
+Constant                                                                                       0.252*                                                 
+                                                                                               (0.135)                                                
+                                                                                                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------
+R2                                                                                              0.051                                                 
+Adjusted R2                                                                                     0.032                                                 
+Residual Std. Error                                                                       0.155 (df = 249)                                            
+F Statistic                                                                             2.680** (df = 5; 249)                                         
+======================================================================================================================================================
+Note:                                                                                                                      *p<0.1; **p<0.05; ***p<0.01
+                                               Modelo estimado excluyendo observaciones influyentes según Cook's Distance. *p<0.1; **p<0.05; ***p<0.01
+
 ```
 
 El coeficiente de la variable clave (`diff_prop_desocup_anual`) se mantuvo prácticamente inalterado:
@@ -1301,19 +1333,22 @@ El objetivo central de este estudio fue **evaluar en qué medida las variaciones
 
 El recorrido por los datos comienza con la inspección bivariada entre Δ desempleo y Δ voto opositor, plasmada en el gráfico de dispersión con cuadrantes construido mediante `ggplot2`. 
 
-[INSERTAR IMAGEN]
+![Gráfico 11](./03_anexos/gráfico_11.png)
 
 El gráfico **—que sitúa las comunas según aumentos o disminuciones simultáneos en ambas variables— muestra una nube difusa,** sin pendiente clara ni concentración marcada en ninguno de los cuadrantes. La línea horizontal y vertical en cero permite visualizar que los puntos se distribuyen casi simétricamente, mostrando que el cambio en el apoyo a la oposición no tiende a aumentar particularmente cuando el desempleo sube, ni a disminuir cuando baja. Esta primera evidencia visual ya sugiere que la lógica de castigo económico no se manifiesta claramente en el nivel comunal.
 
 Para profundizar en esta relación, se incorporó una segunda visualización donde se colorean los puntos según su distancia al centro (0,0), lo que permite detectar casos extremos o patrones inusuales. 
 
-[INSERTAR IMAGEN]
+![Gráfico 12](./03_anexos/gráfico_12.png)
 
 A partir de esta figura —estética gracias a la escala viridis— **se observa que los outliers tienden a concentrarse en comunas donde el cambio electoral fue muy marcado, independientemente de lo que ocurrió con el desempleo.** Este patrón apunta a que **eventos políticos o coyunturas macronacionales influyeron más que las dinámicas económicas locales,** una interpretación que luego será consistente con los resultados del modelo con efectos fijos.
 
 El análisis se vuelve más preciso con la identificación explícita de outliers en cada eje para los años 2013 y 2017, utilizando puntos coloreados según si representan valores extremos en Δ desempleo, en Δ voto o en ambos simultáneamente. Los gráficos con etiquetas —generados mediante ggrepel— permiten confirmar que **las comunas extremas suelen ser casos electorales particulares,** muchas veces asociados a fenómenos contextuales (como movilización inusualmente alta o baja) y no a variaciones laborales. La escasez de comunas con outliers en ambos ejes, sumada a la ausencia de patrones comunes entre 2013 y 2017, **refuerza la impresión de que no hay una asociación estructural entre ambas variables.** Además, estos gráficos ayudan a constatar que ninguna de las comunas extremas altera de manera significativa los resultados del modelo, lo que se confirmó al estimar un modelo sin observaciones influyentes detectadas a través de la distancia de Cook.
 
-[IMAGENES DE AMBOS GRAFICOS (2013 7 2017)]
+![Gráfico 13](./03_anexos/gráfico_13.png)
+
+
+![Gráfico 14](./03_anexos/gráfico_14.png)
 
 La interpretación cualitativa se vuelve más rica cuando incorporamos el contexto electoral del período. Al explorar los valores de Δ voto opositor, observamos un fenómeno que resultó particularmente influyente en los análisis: **la elección de 2013 generó niveles extraordinarios de apoyo a Michelle Bachelet,** lo que produjo puntos de comparación atípicos respecto de 2017. **La proporción de votos obtenida por Bachelet supera ampliamente a la de Sebastián Piñera en su retorno al poder,** generando un cambio electoral muy pronunciado que no responde a dinámicas locales, sino a una coyuntura nacional excepcional. Esta diferencia estructural —visible en nuestros gráficos y corroborada por el efecto fijo significativo del año 2017— explica gran parte de la variabilidad en Δ voto opositor, desplazando así el peso explicativo de las variables comunales.
 
