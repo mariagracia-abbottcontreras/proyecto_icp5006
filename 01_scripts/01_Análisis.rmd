@@ -1,0 +1,470 @@
+---
+title: "Modelos"
+author: "Daniel Trujillo"
+date: "2025-11-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+options(scipen = 999)
+```
+
+
+# Bases 
+```{r}
+library(readxl)
+df_final_full <- read_excel("df_final_full.xlsx")
+```
+
+### Filtrar Elección 2010, 2013 y 2017
+```{r}
+library(dplyr)
+
+df_final_full <- df_final_full %>%
+  filter(año %in% c(2010, 2013, 2017))
+```
+
+### Transofrmar variable año a factor
+```{r}
+df_final_full$año <- as.factor(df_final_full$año)
+df_final_full$region <- relevel(as.factor(df_final_full$region),
+                                ref = "metropolitana de santiago")
+```
+
+#### Crear variable de diferencial
+```{r}
+library(dplyr)
+
+df_final_full <- df_final_full %>%
+  arrange(comuna, año) %>%  
+
+  group_by(comuna) %>%
+  mutate(
+    diff_prop_desocup_anual = prop_desocup_anual - lag(prop_desocup_anual),
+
+    diff_proporcion_votos = proporcion_votos - lag(proporcion_votos)
+  ) %>%
+  ungroup()
+```
+
+### Filtrar Elección 2013 y 2017
+```{r}
+library(dplyr)
+
+df_final_full <- df_final_full %>%
+  filter(año %in% c(2013, 2017))
+```
+
+# Pasos previos
+
+### Relación Lineal y Revisión de Relación de las Variables
+```{r}
+library(ggplot2)
+
+g1 <- ggplot(df_final_full, aes(x = diff_prop_desocup_anual,
+                     y = diff_proporcion_votos)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE, color = "blue") +
+  labs(
+    x = "Δ Desempleo (prop_desocup_anual)",
+    y = "Δ Voto Oposición (proporcion_votos)",
+    title = "Relación entre cambios en desempleo y cambios en votación por la oposición"
+  ) +
+  theme_minimal()
+
+g1 
+```
+
+
+### Boxplot para Analizar Variables
+```{r}
+library(ggplot2)
+
+ggplot(df_final_full, aes(y = diff_proporcion_votos)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  labs(
+    title = "Boxplot de Δ Proporción de Votos",
+    y = "Δ Proporción de Votos"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(df_final_full, aes(y = diff_prop_desocup_anual)) +
+  geom_boxplot(fill = "tomato", color = "black") +
+  labs(
+    title = "Boxplot de Δ Proporción de Desempleo",
+    y = "Δ Desempleo"
+  ) +
+  theme_minimal()
+```
+
+### Contar NAs de variables 
+```{r}
+library(dplyr)
+
+df_final_full %>%
+  summarise(across(everything(), ~ sum(is.na(.)))) %>%
+  tidyr::pivot_longer(cols = everything(),
+                      names_to = "Variable",
+                      values_to = "NAs")
+```
+
+
+### Correlaciones Variables 
+```{r}
+library(dplyr)
+library(corrplot)
+
+# Seleccionar las variables desde df_final_full
+vars_corr <- df_final_full %>%
+  filter(!is.na(diff_proporcion_votos)) %>%   # solo 2013 y 2017
+  select(
+    diff_proporcion_votos,
+    diff_prop_desocup_anual,
+    densidad_pob,
+    poblacion_tot,
+    porc_femenina,
+  )
+
+# Matriz de correlación
+corr_matrix <- cor(vars_corr, use = "pairwise.complete.obs")
+
+# Gráfico visual de correlación
+g2 <- corrplot(
+  corr_matrix,
+  method = "color",
+  type = "upper",
+  addCoef.col = "black",
+  tl.col = "black",
+  tl.srt = 45,
+  col = colorRampPalette(c("red", "white", "blue"))(200)
+)
+
+```
+
+# Modelo Bi variado 
+```{r}
+modelo_bivariado <- lm(
+  diff_proporcion_votos ~ diff_prop_desocup_anual,
+  data = df_final_full
+)
+
+summary(modelo_bivariado)
+```
+
+# Modelo Bi variado con Efecto Fijo Año + Región
+```{r}
+modelo_bivariado_control <- lm(
+  diff_proporcion_votos ~ 
+    diff_prop_desocup_anual +
+    factor(año) +
+    factor(region),
+    
+  data = df_final_full %>% filter(!is.na(diff_proporcion_votos))
+)
+
+summary(modelo_bivariado_control)
+```
+
+# Modelo Multivariado
+```{r}
+modelo_multi_hibrido <- lm(
+  diff_proporcion_votos ~ 
+    diff_prop_desocup_anual + 
+    densidad_pob + 
+    poblacion_tot + 
+    porc_femenina,
+  data = df_final_full
+)
+summary(modelo_multi_hibrido)
+
+```
+
+```{r}
+library(stargazer)
+
+stargazer(
+  modelo_multi_hibrido,
+  type = "text",  # Cambia a "html" o "latex" si lo necesitas
+  title = "Modelo de Regresión Multivariado",
+  dep.var.labels = "Variable dependiente",
+  covariate.labels = c(
+    "Diferencia de proporción de desocupación",
+    "Densidad poblacional",
+    "Población total",
+    "Proporción de población femenina", 
+    "Intercepto"
+  ),
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+  notes = "Estimaciones del modelo de regresión multivariado. *p<0.1; **p<0.05; ***p<0.01"
+)
+```
+
+
+# Modelos con efecto fijo Año y Región
+```{r}
+modelo_multi_control <- lm(
+  diff_proporcion_votos ~ 
+    diff_prop_desocup_anual +
+    densidad_pob +
+    poblacion_tot +
+    porc_femenina +
+    factor(año) +
+    factor(region),
+    
+  data = df_final_full %>% filter(!is.na(diff_proporcion_votos))
+)
+
+summary(modelo_multi_control)
+```
+
+```{r}
+library(stargazer)
+
+stargazer(
+  modelo_multi_control,
+  type = "text",
+  title = "Modelo de Regresión Multivariado con Controles de Año y Región",
+  dep.var.labels = "Diferencia de proporción de votos",
+  covariate.labels = c(
+    "Diferencia de proporción de desocupación anual",
+    "Densidad poblacional",
+    "Población total",
+    "Proporción de población femenina",
+    "Año 2017 (efectos fijos)",
+    "Región (efectos fijos)"
+  ),
+  digits = 3,
+  keep.stat = c("rsq", "adj.rsq", "f", "ser"),
+  # Importante: mostrar efectos fijos completos
+  omit = c("factor(año)", "factor(region)"), 
+  omit.labels = c("Efectos fijos de año", "Efectos fijos de región"),
+  notes = "Modelo con efectos fijos por año y región. *p<0.1; **p<0.05; ***p<0.01"
+)
+```
+
+## Supuestos 
+
+### Multicolinealidad
+```{r}
+library(car)
+vif(modelo_multi_hibrido)
+```
+
+### Normalidad de Residuos
+```{r}
+qqnorm(resid(modelo_multi_hibrido))
+```
+
+### Homoscedasticidad
+```{r}
+plot(modelo_multi_hibrido, which = 1)
+```
+
+### Distancias de Cook
+```{r}
+library(ggplot2)
+library(dplyr)
+
+df_cook <- data.frame(
+  obs = 1:length(cooks.distance(modelo_multi_hibrido)),
+  cook = cooks.distance(modelo_multi_hibrido)
+)
+
+g10 <- ggplot(df_cook, aes(x = obs, y = cook)) +
+  geom_segment(aes(xend = obs, yend = 0)) +
+  geom_point(color = "red") +
+  geom_hline(yintercept = 4/nrow(df_cook), linetype = "dashed", color = "blue") +
+  labs(
+    title = "Distancias de Cook (Observaciones influyentes)",
+    x = "Observación",
+    y = "Distancia de Cook"
+  ) +
+  theme_minimal()
+
+g10
+```
+
+```{r}
+umbral <- 4 / nrow(df_cook)
+
+influyentes <- df_cook %>%
+  filter(cook > umbral) %>%
+  pull(obs)
+
+df_cook %>%
+  arrange(desc(cook)) %>%
+  head(10)
+```
+
+```{r}
+df_sin_influyentes <- df_final_full[-influyentes, ]
+
+modelo_sin_cook <- lm(
+  diff_proporcion_votos ~ diff_prop_desocup_anual +
+    densidad_pob + poblacion_tot + porc_femenina + porc_rural,
+  data = df_sin_influyentes
+)
+
+summary(modelo_sin_cook)
+```
+
+
+### Cluster por Comuna 
+```{r}
+library(lmtest)
+library(sandwich)
+
+cluster_comuna <- coeftest(
+  modelo_multi_hibrido,
+  vcov = vcovCL(modelo_multi_hibrido, cluster = df_final_full$comuna)
+)
+
+cluster_comuna
+```
+
+# Análisis Cualitativo
+
+```{r}
+library(ggplot2)
+
+g11 <- ggplot(df_final_full, aes(x = diff_prop_desocup_anual,
+                          y = diff_proporcion_votos)) +
+  geom_point(color = "red", alpha = 0.6, size = 2) +  # puntos rojos
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed", size = 1) +  # línea horizontal en cero
+  geom_vline(xintercept = 0, color = "black", linetype = "dashed", size = 1) +  # línea vertical en cero
+  labs(
+    x = "Δ Desempleo",
+    y = "Δ Voto Oposición",
+    title = "Cambios en desempleo y cambios en voto por la oposición (cuadrantes)"
+  ) +
+  theme_minimal()
+
+g11
+```
+
+```{r}
+df_plot <- df_final_full %>%
+  mutate(distancia = sqrt(diff_prop_desocup_anual^2 +
+                          diff_proporcion_votos^2))
+
+ggplot(df_plot, aes(x = diff_prop_desocup_anual,
+                    y = diff_proporcion_votos,
+                    color = distancia)) +
+  geom_point(alpha = 0.8, size = 2) +
+  scale_color_viridis_c(option = "C") +   # colores bonitos
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    title = "Distancia al centro (0,0) — Identificación de outliers",
+    x = "Δ Desempleo",
+    y = "Δ Voto Oposición",
+    color = "Distancia"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+
+# Base filtrada
+df_base <- df_final_full %>%
+  filter(!is.na(diff_prop_desocup_anual),
+         !is.na(diff_proporcion_votos)) %>%
+  mutate(
+    # Distancia general
+    distancia = sqrt(diff_prop_desocup_anual^2 + diff_proporcion_votos^2)
+  )
+
+# Umbrales (percentil 95) para X y Y
+umbral_x <- quantile(df_base$diff_prop_desocup_anual, 0.95, na.rm = TRUE)
+umbral_y <- quantile(df_base$diff_proporcion_votos, 0.95, na.rm = TRUE)
+
+plot_outliers_xy <- function(data, year_label) {
+
+  df_year <- data %>%
+    filter(año == year_label) %>%
+    mutate(
+      outlier_x = abs(diff_prop_desocup_anual) >= umbral_x,
+      outlier_y = abs(diff_proporcion_votos) >= umbral_y,
+      outlier_tipo =
+        case_when(
+          outlier_x & outlier_y ~ "Ambos",
+          outlier_x ~ "X",
+          outlier_y ~ "Y",
+          TRUE ~ "Ninguno"
+        )
+    )
+
+  # colores asignados por tipo
+  col_map <- c(
+    "Ambos" = "purple",
+    "X" = "red",
+    "Y" = "blue",
+    "Ninguno" = "gray60"
+  )
+
+ggplot(df_year, aes(x = diff_prop_desocup_anual,
+                      y = diff_proporcion_votos)) +
+    geom_point(aes(color = outlier_tipo), size = 2, alpha = 0.7) +
+    geom_text_repel(
+      data = df_year %>% filter(outlier_tipo != "Ninguno"),
+      aes(label = comuna),
+      size = 3,
+      max.overlaps = 20
+    ) +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_color_manual(values = col_map) +
+    labs(
+      title = paste("Outliers combinados en Eje X & Y — Año", year_label),
+      subtitle = "X = Δ Desempleo extremo | Y = Δ Voto extremo | Ambos = cruza ambos ejes",
+      x = "Δ Desempleo",
+      y = "Δ Voto Oposición",
+      color = "Tipo de Outlier"
+    ) +
+    theme_minimal()
+}
+
+g12 <- plot_outliers_xy(df_base, 2013)
+g13 <- plot_outliers_xy(df_base, 2017)
+
+g12
+g13
+```
+
+```{r}
+library(ggplot2)
+library(ggplotify)
+
+# -------------------------------------------------
+# CONVERTIR G10–G13 A OBJETOS GGPLOT SI SON BASE R
+# -------------------------------------------------
+
+# Ejemplo de conversión si el gráfico es base R:
+# g10 <- as.ggplot(~plot(...))
+# g11 <- as.ggplot(~qqnorm(...))
+# g12 <- as.ggplot(~corrplot(...))
+# g13 <- as.ggplot(~hist(...))
+
+# Si ya son ggplot solo omite la conversión.
+
+# -----------------------------
+# EXPORTAR TODOS LOS GRÁFICOS
+# -----------------------------
+
+ggsave("g10.png", g10, width = 7, height = 6)
+ggsave("g11.png", g11, width = 7, height = 6)
+ggsave("g12.png", g12, width = 7, height = 6)
+ggsave("g13.png", g13, width = 7, height = 6)
+```
+
