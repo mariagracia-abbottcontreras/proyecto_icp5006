@@ -811,7 +811,7 @@ modelo_bivariado <- lm(
 
 summary(modelo_bivariado)
 ```
-[INSERTAR IMAGEN]
+[Ver tabla](./03_anexos/modelo_bivariado_github.md)
 
 **Resultados principales:**
 
