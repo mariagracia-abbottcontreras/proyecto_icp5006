@@ -811,7 +811,31 @@ modelo_bivariado <- lm(
 
 summary(modelo_bivariado)
 ```
-[Ver tabla](./03_anexos/modelo_bivariado_github.md)
+
+
+```{r}
+Modelo de Regresión Bivariado
+=======================================================================================================
+                                                              Dependent variable:                      
+                                         --------------------------------------------------------------
+                                                       Diferencia en proporción de votos               
+-------------------------------------------------------------------------------------------------------
+Diferencia proporción desocupación anual                             -0.290                            
+                                                                    (0.269)                            
+                                                                                                       
+Constant                                                            0.029***                           
+                                                                    (0.009)                            
+                                                                                                       
+-------------------------------------------------------------------------------------------------------
+R2                                                                   0.002                             
+Adjusted R2                                                          0.0003                            
+Residual Std. Error                                             0.207 (df = 525)                       
+F Statistic                                                   1.163 (df = 1; 525)                      
+=======================================================================================================
+Note:                                                                       *p<0.1; **p<0.05; ***p<0.01
+                                         Estimaciones del modelo bivariado. *p<0.1; **p<0.05; ***p<0.01
+
+```
 
 **Resultados principales:**
 
@@ -838,7 +862,77 @@ modelo_bivariado_control <- lm(
 )
 summary(modelo_bivariado_control)
 ```
-[INSERTAR IMAGEN]
+
+```{r}
+Modelo Bivariado con Efectos Fijos (Año y Región)
+==========================================================================================
+                                                  Dependent variable:                     
+                              ------------------------------------------------------------
+                                           Diferencia en proporción de votos              
+------------------------------------------------------------------------------------------
+(Intercepto)                                             0.159                            
+                                                        (0.210)                           
+                                                                                          
+Dif. prop. desocupación anual                          -0.263***                          
+                                                        (0.015)                           
+                                                                                          
+Año: 2017                                                -0.028                           
+                                                        (0.050)                           
+                                                                                          
+Región: Aisén                                            -0.057                           
+                                                        (0.067)                           
+                                                                                          
+Región: Arica y Parinacota                               0.016                            
+                                                        (0.050)                           
+                                                                                          
+Región: Antofagasta                                      0.020                            
+                                                        (0.041)                           
+                                                                                          
+Región: Atacama                                          0.024                            
+                                                        (0.033)                           
+                                                                                          
+Región: Coquimbo                                         0.002                            
+                                                        (0.029)                           
+                                                                                          
+Región: La Araucanía                                     -0.013                           
+                                                        (0.029)                           
+                                                                                          
+Región: Los Lagos                                        0.010                            
+                                                        (0.038)                           
+                                                                                          
+Región: Los Ríos                                         -0.052                           
+                                                        (0.066)                           
+                                                                                          
+Región: Magallanes                                       0.042                            
+                                                        (0.053)                           
+                                                                                          
+Región: Tarapacá                                         0.003                            
+                                                        (0.026)                           
+                                                                                          
+Región: Valparaíso                                       0.040                            
+                                                        (0.025)                           
+                                                                                          
+Región: Biobío                                           -0.003                           
+                                                        (0.036)                           
+                                                                                          
+Región: O'Higgins (1)                                    0.062*                           
+                                                        (0.035)                           
+                                                                                          
+Región: O'Higgins (2)                                    0.047                            
+                                                        (0.028)                           
+                                                                                          
+Región: Maule                                           0.143***                          
+                                                        (0.017)                           
+                                                                                          
+------------------------------------------------------------------------------------------
+R2                                                       0.434                            
+Adjusted R2                                              0.415                            
+Residual Std. Error                                 0.158 (df = 509)                      
+F Statistic                                     22.993*** (df = 17; 509)                  
+==========================================================================================
+Note:                                                          *p<0.1; **p<0.05; ***p<0.01
+                              Incluye todos los efectos fijos. *p<0.1; **p<0.05; ***p<0.01
+```
 
 **Resultados principales:**
 
@@ -871,7 +965,39 @@ modelo_multi_hibrido <- lm(
 )
 summary(modelo_multi_hibrido)
 ```
-[INSERTAR IMAGEN]
+
+```{r}
+Modelo de Regresión Multivariado sin efectos fijos
+=======================================================================================================================
+                                                                      Dependent variable:                              
+                                         ------------------------------------------------------------------------------
+                                                                      Variable dependiente                             
+-----------------------------------------------------------------------------------------------------------------------
+Diferencia de proporción de desocupación                                     -0.311                                    
+                                                                            (0.273)                                    
+                                                                                                                       
+Densidad poblacional                                                        -0.00000                                   
+                                                                           (0.00000)                                   
+                                                                                                                       
+Población total                                                             -0.00000                                   
+                                                                           (0.00000)                                   
+                                                                                                                       
+Proporción de población femenina                                             0.0002                                    
+                                                                            (0.003)                                    
+                                                                                                                       
+Intercepto                                                                   0.027                                     
+                                                                            (0.138)                                    
+                                                                                                                       
+-----------------------------------------------------------------------------------------------------------------------
+R2                                                                           0.009                                     
+Adjusted R2                                                                  0.001                                     
+Residual Std. Error                                                     0.208 (df = 511)                               
+F Statistic                                                           1.110 (df = 4; 511)                              
+=======================================================================================================================
+Note:                                                                                       *p<0.1; **p<0.05; ***p<0.01
+                                         Estimaciones del modelo de regresión multivariado. *p<0.1; **p<0.05; ***p<0.01
+
+```
 
 **Resultados principales:**
 
@@ -902,7 +1028,87 @@ modelo_multi_control <- lm(
 
 summary(modelo_multi_control)
 ```
-[INSERTAR IMAGEN]
+
+```{r}
+Modelo de Regresión Multivariado con Controles de Año y Región
+=====================================================================================================================
+                                                                        Dependent variable:                          
+                                               ----------------------------------------------------------------------
+                                                                 Diferencia de proporción de votos                   
+---------------------------------------------------------------------------------------------------------------------
+Diferencia de proporción de desocupación anual                                 0.173                                 
+                                                                              (0.214)                                
+                                                                                                                     
+Densidad poblacional                                                          -0.00000                               
+                                                                             (0.00000)                               
+                                                                                                                     
+Población total                                                               -0.00000                               
+                                                                             (0.00000)                               
+                                                                                                                     
+Proporción de población femenina                                               0.001                                 
+                                                                              (0.003)                                
+                                                                                                                     
+Año 2017 (efectos fijos)                                                     -0.264***                               
+                                                                              (0.015)                                
+                                                                                                                     
+Región (efectos fijos)                                                         -0.060                                
+                                                                              (0.072)                                
+                                                                                                                     
+factor(region)de antofagasta                                                   0.010                                 
+                                                                              (0.055)                                
+                                                                                                                     
+factor(region)de atacama                                                       0.010                                 
+                                                                              (0.045)                                
+                                                                                                                     
+factor(region)de coquimbo                                                      0.013                                 
+                                                                              (0.038)                                
+                                                                                                                     
+factor(region)de la araucania                                                  -0.010                                
+                                                                              (0.034)                                
+                                                                                                                     
+factor(region)de los lagos                                                     -0.024                                
+                                                                              (0.034)                                
+                                                                                                                     
+factor(region)de los rios                                                      -0.002                                
+                                                                              (0.042)                                
+                                                                                                                     
+factor(region)de magallanes y antartica ch.                                    -0.060                                
+                                                                              (0.070)                                
+                                                                                                                     
+factor(region)de tarapaca                                                      0.039                                 
+                                                                              (0.061)                                
+                                                                                                                     
+factor(region)de valparaiso                                                    -0.009                                
+                                                                              (0.031)                                
+                                                                                                                     
+factor(region)del biobio                                                       0.028                                 
+                                                                              (0.030)                                
+                                                                                                                     
+factor(region)del libertador bdo. o'higgins                                    -0.015                                
+                                                                              (0.040)                                
+                                                                                                                     
+factor(region)del libertador bdo. ohiggins                                     0.051                                 
+                                                                              (0.039)                                
+                                                                                                                     
+factor(region)del maule                                                        0.035                                 
+                                                                              (0.033)                                
+                                                                                                                     
+Constant                                                                       0.105                                 
+                                                                              (0.130)                                
+                                                                                                                     
+---------------------------------------------------------------------------------------------------------------------
+Efectos fijos de año                                                             No                                  
+Efectos fijos de región                                                          No                                  
+---------------------------------------------------------------------------------------------------------------------
+R2                                                                             0.435                                 
+Adjusted R2                                                                    0.414                                 
+Residual Std. Error                                                       0.159 (df = 496)                           
+F Statistic                                                           20.131*** (df = 19; 496)                       
+=====================================================================================================================
+Note:                                                                                     *p<0.1; **p<0.05; ***p<0.01
+                                               Modelo con efectos fijos por año y región. *p<0.1; **p<0.05; ***p<0.01
+
+```
 
 **Resultados principales:**
 
