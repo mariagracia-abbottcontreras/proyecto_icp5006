@@ -1,0 +1,69 @@
+
+Modelo Bivariado con Efectos Fijos (Año y Región)
+==========================================================================================
+                                                  Dependent variable:                     
+                              ------------------------------------------------------------
+                                           Diferencia en proporción de votos              
+------------------------------------------------------------------------------------------
+(Intercepto)                                             0.159                            
+                                                        (0.210)                           
+                                                                                          
+Dif. prop. desocupación anual                          -0.263***                          
+                                                        (0.015)                           
+                                                                                          
+Año: 2017                                                -0.028                           
+                                                        (0.050)                           
+                                                                                          
+Región: Aisén                                            -0.057                           
+                                                        (0.067)                           
+                                                                                          
+Región: Arica y Parinacota                               0.016                            
+                                                        (0.050)                           
+                                                                                          
+Región: Antofagasta                                      0.020                            
+                                                        (0.041)                           
+                                                                                          
+Región: Atacama                                          0.024                            
+                                                        (0.033)                           
+                                                                                          
+Región: Coquimbo                                         0.002                            
+                                                        (0.029)                           
+                                                                                          
+Región: La Araucanía                                     -0.013                           
+                                                        (0.029)                           
+                                                                                          
+Región: Los Lagos                                        0.010                            
+                                                        (0.038)                           
+                                                                                          
+Región: Los Ríos                                         -0.052                           
+                                                        (0.066)                           
+                                                                                          
+Región: Magallanes                                       0.042                            
+                                                        (0.053)                           
+                                                                                          
+Región: Tarapacá                                         0.003                            
+                                                        (0.026)                           
+                                                                                          
+Región: Valparaíso                                       0.040                            
+                                                        (0.025)                           
+                                                                                          
+Región: Biobío                                           -0.003                           
+                                                        (0.036)                           
+                                                                                          
+Región: O'Higgins (1)                                    0.062*                           
+                                                        (0.035)                           
+                                                                                          
+Región: O'Higgins (2)                                    0.047                            
+                                                        (0.028)                           
+                                                                                          
+Región: Maule                                           0.143***                          
+                                                        (0.017)                           
+                                                                                          
+------------------------------------------------------------------------------------------
+R2                                                       0.434                            
+Adjusted R2                                              0.415                            
+Residual Std. Error                                 0.158 (df = 509)                      
+F Statistic                                     22.993*** (df = 17; 509)                  
+==========================================================================================
+Note:                                                          *p<0.1; **p<0.05; ***p<0.01
+                              Incluye todos los efectos fijos. *p<0.1; **p<0.05; ***p<0.01
