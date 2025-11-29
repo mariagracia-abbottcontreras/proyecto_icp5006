@@ -912,7 +912,7 @@ summary(modelo_multi_control)
 
 **Interpretación:** Incluso en el modelo más completo, el desempleo comunal no presenta un efecto significativo sobre los cambios en el voto opositor. Los factores estructurales comunales tampoco explican las variaciones electorales. El cambio entre 2013 y 2017 es, nuevamente, el componente más influyente del modelo.
 
-### 10.5 ¿Qué nos dicen los modelos econométricos?
+### 11.5 ¿Qué nos dicen los modelos econométricos?
 
 Los cuatro modelos estimados coinciden en el mismo resultado central: **las variaciones en el desempleo comunal no tienen un efecto significativo sobre las variaciones en el voto opositor en Chile entre 2013 y 2017.**
 
